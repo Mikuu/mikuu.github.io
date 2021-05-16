@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="如今，契约测试已经逐渐成为测试圈中一个炙手可热的话题，特别是在微服务大行其道的行业背景下，越来越多的团队开始关注服务之间的契约及其契约测试。 从2015年开始我就在Thoughtworks和QA Community里推广契约测试，收到了不错的成效，期间有不少同学和我讨论过如何上手契约测试，发现网上介绍契约测试的讲义、博客不乏其数（当然，质量也参差不齐），可手把手教你写契约测试的文章却几乎没有，原因">
+<meta property="og:type" content="article">
+<meta property="og:title" content="契约测试之Pact By Example">
+<meta property="og:url" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/index.html">
+<meta property="og:site_name" content="Ariman&#39;s Lazy Blog">
+<meta property="og:description" content="如今，契约测试已经逐渐成为测试圈中一个炙手可热的话题，特别是在微服务大行其道的行业背景下，越来越多的团队开始关注服务之间的契约及其契约测试。 从2015年开始我就在Thoughtworks和QA Community里推广契约测试，收到了不错的成效，期间有不少同学和我讨论过如何上手契约测试，发现网上介绍契约测试的讲义、博客不乏其数（当然，质量也参差不齐），可手把手教你写契约测试的文章却几乎没有，原因">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.miku.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.nanoha.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.miku.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.nanoha.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/pact-broker.png">
+<meta property="article:published_time" content="2018-02-28T15:33:51.000Z">
+<meta property="article:modified_time" content="2021-05-16T06:36:37.008Z">
+<meta property="article:author" content="Ariman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.miku.png">
+
+<link rel="canonical" href="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>契约测试之Pact By Example | Ariman's Lazy Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143312940-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-143312940-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ariman's Lazy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          契约测试之Pact By Example
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-02-28 23:33:51" itemprop="dateCreated datePublished" datetime="2018-02-28T23:33:51+08:00">2018-02-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-05-16 14:36:37" itemprop="dateModified" datetime="2021-05-16T14:36:37+08:00">2021-05-16</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>如今，契约测试已经逐渐成为测试圈中一个炙手可热的话题，特别是在微服务大行其道的行业背景下，越来越多的团队开始关注服务之间的契约及其契约测试。</p>
+<p>从2015年开始我就在Thoughtworks和QA Community里推广契约测试，收到了不错的成效，期间有不少同学和我讨论过如何上手契约测试，发现网上介绍契约测试的讲义、博客不乏其数（当然，质量也参差不齐），可手把手教你写契约测试的文章却几乎没有，原因恐怕就是契约测试的特性吧。契约测试是架设在消费者和服务者之间的一种比较特殊的测试活动，如果你只是想自己学习而又没有合适的项目环境，那你得自己先准备适当的消费者和服务者程序源代码，然后再开始写契约测试，而不是像写个Selenium测试那样，两三行代码就可以随随便便地调戏度娘。～(￣▽￣～)</p>
+<p>所以，我花了些时间磨叽出了这片文章……</p>
+<p>本文不会涉及契约测试的基本概念，因为相应的文章网上太多了，请大家自己去捞吧。本文也不会讨论契约测试的使用场景以及对其的正确理解，这方面的话题我会在今后另文介绍（好吧，我承认我很懒ㄟ(▔,▔)ㄏ）。</p>
+<hr>
+<p>OK，以下开始正文！</p>
+<p>契约测试的精髓在于消费者驱动，实践消费者驱动契约测试的工具主要有Pact，Pacto 和 Spring Cloud Contract，其中Pact是目前最为推荐的，我下面的例子都将使用Pact来练习。<a target="_blank" rel="noopener" href="https://docs.pact.io/">Pact</a>最早是用Ruby实现的，目前已经扩展支撑Java，.NET，Javascript，Go，Swift，Python和PHP，其中<a target="_blank" rel="noopener" href="https://github.com/DiUS/pact-jvm">Java（JVM）</a>是我们目前项目中使用最频繁的，所以我的例子亦都是基于PACT JVM来实现（观众A:我们都用Pyhton，你丫给我说Java(╯°□°）╯︵┻━┻）</p>
+<h2 id="示例源码"><a href="#示例源码" class="headerlink" title="示例源码"></a>示例源码</h2><p>大家可以从Github上获取<a target="_blank" rel="noopener" href="https://github.com/Mikuu/Pact-JVM-Example">本文示例的源码</a>，也可以从PACT JVM官网上面找到对应的PACT-JVM-Example<a target="_blank" rel="noopener" href="https://github.com/DiUS/pact-jvm#links">链接</a></p>
+<h2 id="示例应用"><a href="#示例应用" class="headerlink" title="示例应用"></a>示例应用</h2><p>示例应用非常简单，一个服务提供者Provider，两个服务消费者Miku和Nanoha（啥？你不知道Miku和Nanoha是什么？……问度娘吧……(～o￣3￣)～……）。</p>
+<h3 id="Provider"><a href="#Provider" class="headerlink" title="Provider"></a>Provider</h3><p>Provider是一个简单的API，返回一些个人信息。<br>启动Provider：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-provider:bootRun</span><br></pre></td></tr></table></figure>
+<p>然后访问 <a target="_blank" rel="noopener" href="http://localhost:8080/information?name=Miku">http://localhost:8080/information?name=Miku</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.miku.png" alt=""></p>
+<p>或者访问 <a target="_blank" rel="noopener" href="http://localhost:8080/information?name=Nanoha">http://localhost:8080/information?name=Nanoha</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.nanoha.png" alt=""></p>
+<h3 id="消费者-Miku-amp-Nanoha"><a href="#消费者-Miku-amp-Nanoha" class="headerlink" title="消费者 Miku &amp; Nanoha"></a>消费者 Miku &amp; Nanoha</h3><p>Miku和Nanoha调用Provider的API拿到各自的数据，然后显示在前端页面上。<br>启动Miku：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-miku:bootRun</span><br></pre></td></tr></table></figure>
+<p>然后用浏览器访问 <a target="_blank" rel="noopener" href="http://localhost:8081/miku">http://localhost:8081/miku</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.miku.png" alt=""></p>
+<p>启动Nanoha：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-nanoha:bootRun</span><br></pre></td></tr></table></figure>
+<p>然后用浏览器访问 <a target="_blank" rel="noopener" href="http://localhost:8082/nanoha">http://localhost:8082/nanoha</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.nanoha.png" alt=""></p>
+<p>Miku和Nanoha做的事情基本一样，差别就是Nanoha会去多拿<code>.nationality</code>这个字段，而<code>.salary</code>这个字段Miku和Nanoha都没有用到。</p>
+<blockquote>
+<p>示例中的1个Provider和2个Consumer都在一个codebase里面，这只是为了方便管理示例代码，而实际的项目中，绝大多数的Provider和Consumer都是在不同的codebase里面管理的，请注意哟！</p>
+</blockquote>
+<h2 id="Provider与Miku间的契约测试"><a href="#Provider与Miku间的契约测试" class="headerlink" title="Provider与Miku间的契约测试"></a>Provider与Miku间的契约测试</h2><p>好了，大概了解示例应用之后，我们就可以开始写契约测试了（当然，如果你还想再撩撩示例的源码，也是可以的啦，不过相信我，里面没多少油水的）</p>
+<p>我们先从Provider和Miku<code>之间</code>的契约测试开始。</p>
+<blockquote>
+<p>请注意”之间”这个关键词，当我们谈论契约测试时，一定要明确它是建立在某一对Provider和Consumer之间的测试活动。没有Provider，Consumer做不了契约测试；没有Consumer，Provider不需要做契约测试。</p>
+</blockquote>
+<h3 id="编写消费者Miku端的测试案例"><a href="#编写消费者Miku端的测试案例" class="headerlink" title="编写消费者Miku端的测试案例"></a>编写消费者Miku端的测试案例</h3><p>目前，PACT JVM在消费者端的契约测试主要有三种写法：</p>
+<ul>
+<li>基本的Junit</li>
+<li>Junit Rule</li>
+<li>Junit DSL</li>
+</ul>
+<p>它们都能完成消费者端契约文件的生成，只是写法有所不同，带来的代码简洁度和部分功能有些许差异。</p>
+<blockquote>
+<p>所有的契约测试代码都已经写好了，你可以在<code>src/test/java/ariman/pact/consumer</code>下面找到。</p>
+</blockquote>
+<h4 id="基本的Junit"><a href="#基本的Junit" class="headerlink" title="基本的Junit"></a>基本的Junit</h4><p>“talk is cheap, show you the code”</p>
+<p><code>PactBaseConsumerTest.java</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PactBaseConsumerTest</span> <span class="keyword">extends</span> <span class="title">ConsumerPactTestMk2</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Pact(provider=&quot;ExampleProvider&quot;, consumer=&quot;BaseConsumer&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> RequestResponsePact <span class="title">createPact</span><span class="params">(PactDslWithProvider builder)</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> builder</span><br><span class="line">                .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">                .uponReceiving(<span class="string">&quot;Pact JVM example Pact interaction&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Miku&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">                .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(<span class="string">&quot;&#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;salary\&quot;: 45000,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;fullName\&quot;: \&quot;Hatsune Miku\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;nationality\&quot;: \&quot;Japan\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;contact\&quot;: &#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Email\&quot;: \&quot;hatsune.miku@ariman.com\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Phone Number\&quot;: \&quot;9090950\&quot;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    &#125;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;&#125;&quot;</span>)</span><br><span class="line"></span><br><span class="line">                .toPact();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> String <span class="title">providerName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;ExampleProvider&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> String <span class="title">consumerName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;BaseConsumer&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">runTest</span><span class="params">(MockServer mockServer)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">        providerHandler.setBackendURL(mockServer.getUrl());</span><br><span class="line">        Information information = providerHandler.getInformation();</span><br><span class="line">        assertEquals(information.getName(), <span class="string">&quot;Hatsune Miku&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里的关键是<code>createPact</code>和<code>runTest</code>这两个方法：</p>
+<ul>
+<li><code>createPact</code>直接定义了契约交互的全部内容，比如Request的路径和参数，以及返回的Response的具体内容；</li>
+<li><code>runTest</code>是执行测试的方法，其中<code>ProviderHandler</code>是Miku应用代码中的类，我们直接使用它来发送真正的Request，发给谁呢？发给<code>mockServer</code>，Pact会启动一个mockServer, 基于Java原生的HttpServer封装，用来代替真正的Provider应答<code>createPact</code>中定义好的响应内容，继而模拟了整个契约的内容；</li>
+<li>runTest中的断言可以用来保证我们编写的契约内容是符合Miku期望的，你可以把它理解为一种类似Consumer端的集成测试；</li>
+</ul>
+<h4 id="Junit-Rule"><a href="#Junit-Rule" class="headerlink" title="Junit Rule"></a>Junit Rule</h4><p><code>PactJunitRuleTest.java</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PactJunitRuleTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Rule</span></span><br><span class="line">    <span class="keyword">public</span> PactProviderRuleMk2 mockProvider = <span class="keyword">new</span> PactProviderRuleMk2(<span class="string">&quot;ExampleProvider&quot;</span>,<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Pact(consumer=&quot;JunitRuleConsumer&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> RequestResponsePact <span class="title">createPact</span><span class="params">(PactDslWithProvider builder)</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> builder</span><br><span class="line">                .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">                .uponReceiving(<span class="string">&quot;Pact JVM example Pact interaction&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Miku&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">                .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(<span class="string">&quot;&#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;salary\&quot;: 45000,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;fullName\&quot;: \&quot;Hatsune Miku\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;nationality\&quot;: \&quot;Japan\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;contact\&quot;: &#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Email\&quot;: \&quot;hatsune.miku@ariman.com\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Phone Number\&quot;: \&quot;9090950\&quot;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    &#125;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;&#125;&quot;</span>)</span><br><span class="line">                .toPact();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="meta">@PactVerification</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">runTest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">        providerHandler.setBackendURL(mockProvider.getUrl());</span><br><span class="line">        Information information = providerHandler.getInformation();</span><br><span class="line">        assertEquals(information.getName(), <span class="string">&quot;Hatsune Miku&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>相较于基本的Junit写法，<code>PactProviderRuleMk2</code>能够让代码更加的简洁，它还可以自定义Mock Provider的address和port。如果像上面的代码一样省略address和port，则会默认使用127.0.0.1和随机端口。Junit Rule还提供了方法让你可以同时对多个Provider进行测试，以及让Mock Provider使用HTTPS进行交互。</p>
+<blockquote>
+<p>基于体力有限，本示例没有包含MultiProviders和HTTPS的例子，有需要的同学可以在PACT JVM官网上查询相关的用法……别，别打呀，俺承认，俺就是懒…还打…#$%^&amp;*!@#$%^&amp;…喂：110吗？俺要报警……</p>
+</blockquote>
+<h4 id="Junit-DSL"><a href="#Junit-DSL" class="headerlink" title="Junit DSL"></a>Junit DSL</h4><p><code>PactJunitDSLTest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PactJunitDSLTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">checkResult</span><span class="params">(PactVerificationResult result)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (result <span class="keyword">instanceof</span> PactVerificationResult.Error) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(((PactVerificationResult.Error)result).getError());</span><br><span class="line">        &#125;</span><br><span class="line">        assertEquals(PactVerificationResult.Ok.INSTANCE, result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testPact1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        RequestResponsePact pact = ConsumerPactBuilder</span><br><span class="line">            .consumer(<span class="string">&quot;JunitDSLConsumer1&quot;</span>)</span><br><span class="line">            .hasPactWith(<span class="string">&quot;ExampleProvider&quot;</span>)</span><br><span class="line">            .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">            .uponReceiving(<span class="string">&quot;Query fullName is Miku&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Miku&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">            .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(<span class="string">&quot;&#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;salary\&quot;: 45000,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;fullName\&quot;: \&quot;Hatsune Miku\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;nationality\&quot;: \&quot;Japan\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;contact\&quot;: &#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Email\&quot;: \&quot;hatsune.miku@ariman.com\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Phone Number\&quot;: \&quot;9090950\&quot;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    &#125;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;&#125;&quot;</span>)</span><br><span class="line">            .toPact();</span><br><span class="line"></span><br><span class="line">        MockProviderConfig config = MockProviderConfig.createDefault();</span><br><span class="line">        PactVerificationResult result = runConsumerTest(pact, config, mockServer -&gt; &#123;</span><br><span class="line">            ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">            providerHandler.setBackendURL(mockServer.getUrl(), <span class="string">&quot;Miku&quot;</span>);</span><br><span class="line">            Information information = providerHandler.getInformation();</span><br><span class="line">            assertEquals(information.getName(), <span class="string">&quot;Hatsune Miku&quot;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        checkResult(result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testPact2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        RequestResponsePact pact = ConsumerPactBuilder</span><br><span class="line">            .consumer(<span class="string">&quot;JunitDSLConsumer2&quot;</span>)</span><br><span class="line">            .hasPactWith(<span class="string">&quot;ExampleProvider&quot;</span>)</span><br><span class="line">            .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">            .uponReceiving(<span class="string">&quot;Query fullName is Nanoha&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Nanoha&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">            .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(<span class="string">&quot;&#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;salary\&quot;: 80000,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;fullName\&quot;: \&quot;Takamachi Nanoha\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;nationality\&quot;: \&quot;Japan\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    \&quot;contact\&quot;: &#123;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Email\&quot;: \&quot;takamachi.nanoha@ariman.com\&quot;,\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;        \&quot;Phone Number\&quot;: \&quot;9090940\&quot;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;    &#125;\n&quot;</span> +</span><br><span class="line">                        <span class="string">&quot;&#125;&quot;</span>)</span><br><span class="line">                .toPact();</span><br><span class="line"></span><br><span class="line">        MockProviderConfig config = MockProviderConfig.createDefault();</span><br><span class="line">        PactVerificationResult result = runConsumerTest(pact, config, mockServer -&gt; &#123;</span><br><span class="line">            ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">            providerHandler.setBackendURL(mockServer.getUrl(), <span class="string">&quot;Nanoha&quot;</span>);</span><br><span class="line"></span><br><span class="line">            Information information = providerHandler.getInformation();</span><br><span class="line">            assertEquals(information.getName(), <span class="string">&quot;Takamachi Nanoha&quot;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        checkResult(result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>基本的Junit和Junit Rule的写法只能在一个测试文件里面写一个Test Case，而使用Junit DSL则可以像上面的例子一样写多个Test Case。同样，你也可以通过<code>MockProviderConfig.createDefault()</code>配置Mock Server的address和port。上面的例子使用了默认配置。</p>
+<p><code>PactJunitDSLJsonBodyTest</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PactJunitDSLJsonBodyTest</span> </span>&#123;</span><br><span class="line">    PactSpecVersion pactSpecVersion;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">checkResult</span><span class="params">(PactVerificationResult result)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (result <span class="keyword">instanceof</span> PactVerificationResult.Error) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(((PactVerificationResult.Error)result).getError());</span><br><span class="line">        &#125;</span><br><span class="line">        assertEquals(PactVerificationResult.Ok.INSTANCE, result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testWithPactDSLJsonBody</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        DslPart body = <span class="keyword">new</span> PactDslJsonBody()</span><br><span class="line">                .numberType(<span class="string">&quot;salary&quot;</span>, <span class="number">45000</span>)</span><br><span class="line">                .stringType(<span class="string">&quot;fullName&quot;</span>, <span class="string">&quot;Hatsune Miku&quot;</span>)</span><br><span class="line">                .stringType(<span class="string">&quot;nationality&quot;</span>, <span class="string">&quot;Japan&quot;</span>)</span><br><span class="line">                .object(<span class="string">&quot;contact&quot;</span>)</span><br><span class="line">                .stringValue(<span class="string">&quot;Email&quot;</span>, <span class="string">&quot;hatsune.miku@ariman.com&quot;</span>)</span><br><span class="line">                .stringValue(<span class="string">&quot;Phone Number&quot;</span>, <span class="string">&quot;9090950&quot;</span>)</span><br><span class="line">                .closeObject();</span><br><span class="line"></span><br><span class="line">        RequestResponsePact pact = ConsumerPactBuilder</span><br><span class="line">            .consumer(<span class="string">&quot;JunitDSLJsonBodyConsumer&quot;</span>)</span><br><span class="line">            .hasPactWith(<span class="string">&quot;ExampleProvider&quot;</span>)</span><br><span class="line">            .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">            .uponReceiving(<span class="string">&quot;Query fullName is Miku&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Miku&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">            .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(body)</span><br><span class="line">            .toPact();</span><br><span class="line"></span><br><span class="line">        MockProviderConfig config = MockProviderConfig.createDefault(<span class="keyword">this</span>.pactSpecVersion.V3);</span><br><span class="line">        PactVerificationResult result = runConsumerTest(pact, config, mockServer -&gt; &#123;</span><br><span class="line">            ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">            providerHandler.setBackendURL(mockServer.getUrl());</span><br><span class="line">            Information information = providerHandler.getInformation();</span><br><span class="line">            assertEquals(information.getName(), <span class="string">&quot;Hatsune Miku&quot;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        checkResult(result);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testWithLambdaDSLJsonBody</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        DslPart body = newJsonBody((root) -&gt; &#123;</span><br><span class="line">            root.numberValue(<span class="string">&quot;salary&quot;</span>, <span class="number">45000</span>);</span><br><span class="line">            root.stringValue(<span class="string">&quot;fullName&quot;</span>, <span class="string">&quot;Hatsune Miku&quot;</span>);</span><br><span class="line">            root.stringValue(<span class="string">&quot;nationality&quot;</span>, <span class="string">&quot;Japan&quot;</span>);</span><br><span class="line">            root.object(<span class="string">&quot;contact&quot;</span>, (contactObject) -&gt; &#123;</span><br><span class="line">                contactObject.stringMatcher(<span class="string">&quot;Email&quot;</span>, <span class="string">&quot;.*@ariman.com&quot;</span>, <span class="string">&quot;hatsune.miku@ariman.com&quot;</span>);</span><br><span class="line">                contactObject.stringType(<span class="string">&quot;Phone Number&quot;</span>, <span class="string">&quot;9090950&quot;</span>);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;).build();</span><br><span class="line"></span><br><span class="line">        RequestResponsePact pact = ConsumerPactBuilder</span><br><span class="line">            .consumer(<span class="string">&quot;JunitDSLLambdaJsonBodyConsumer&quot;</span>)</span><br><span class="line">            .hasPactWith(<span class="string">&quot;ExampleProvider&quot;</span>)</span><br><span class="line">            .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">            .uponReceiving(<span class="string">&quot;Query fullName is Miku&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Miku&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">            .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(body)</span><br><span class="line">            .toPact();</span><br><span class="line"></span><br><span class="line">        MockProviderConfig config = MockProviderConfig.createDefault(<span class="keyword">this</span>.pactSpecVersion.V3);</span><br><span class="line">        PactVerificationResult result = runConsumerTest(pact, config, mockServer -&gt; &#123;</span><br><span class="line">            ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">            providerHandler.setBackendURL(mockServer.getUrl());</span><br><span class="line">            Information information = providerHandler.getInformation();</span><br><span class="line">            assertEquals(information.getName(), <span class="string">&quot;Hatsune Miku&quot;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        checkResult(result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当然，Junit DSL的强大之处绝不仅仅是让你多写几个Test Case， 通过使用PactDslJsonBody和Lambda DSL你可以更好的编写你的契约测试文件：</p>
+<ul>
+<li>对契约中Response Body的内容，使用JsonBody代替简单的字符串，可以让你的代码易读性更好；</li>
+<li>JsonBody提供了强大的Check By Type和Check By Value的功能，让你可以控制对Provider的Response测试精度。比如，对于契约中的某个字段，你是要确保Provider的返回必须是具体某个数值（check by Value），还是只要数据类型相同就可以（check by type），比如都是String或者Int。你甚至可以直接使用正则表达式来做更加灵活的验证；</li>
+<li>目前支持的匹配验证方法：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>method</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>string, stringValue</td>
+<td>Match a string value (using string equality)</td>
+</tr>
+<tr>
+<td>number, numberValue</td>
+<td>Match a number value (using Number.equals)*</td>
+</tr>
+<tr>
+<td>booleanValue</td>
+<td>Match a boolean value (using equality)</td>
+</tr>
+<tr>
+<td>stringType</td>
+<td>Will match all Strings</td>
+</tr>
+<tr>
+<td>numberType</td>
+<td>Will match all numbers*</td>
+</tr>
+<tr>
+<td>integerType</td>
+<td>Will match all numbers that are integers (both ints and longs)*</td>
+</tr>
+<tr>
+<td>decimalType</td>
+<td>Will match all real numbers (floating point and decimal)*</td>
+</tr>
+<tr>
+<td>booleanType</td>
+<td>Will match all boolean values (true and false)</td>
+</tr>
+<tr>
+<td>stringMatcher</td>
+<td>Will match strings using the provided regular expression</td>
+</tr>
+<tr>
+<td>timestamp</td>
+<td>Will match string containing timestamps. If a timestamp format is not given, will match an ISO timestamp format</td>
+</tr>
+<tr>
+<td>date</td>
+<td>Will match string containing dates. If a date format is not given, will match an ISO date format</td>
+</tr>
+<tr>
+<td>time</td>
+<td>Will match string containing times. If a time format is not given, will match an ISO time format</td>
+</tr>
+<tr>
+<td>ipAddress</td>
+<td>Will match string containing IP4 formatted address.</td>
+</tr>
+<tr>
+<td>id</td>
+<td>Will match all numbers by type</td>
+</tr>
+<tr>
+<td>hexValue</td>
+<td>Will match all hexadecimal encoded strings</td>
+</tr>
+<tr>
+<td>uuid</td>
+<td>Will match strings containing UUIDs</td>
+</tr>
+<tr>
+<td>includesStr</td>
+<td>Will match strings containing the provided string</td>
+</tr>
+<tr>
+<td>equalsTo</td>
+<td>Will match using equals</td>
+</tr>
+<tr>
+<td>matchUrl</td>
+<td>Defines a matcher for URLs, given the base URL path and a sequence of path fragments. The path fragments could be strings or regular expression matchers</td>
+</tr>
+</tbody></table>
+<ul>
+<li>对于Array和Map这样的数据结构，DSL也有相应匹配验证方法，我这里就不罗列了，请参考<a target="_blank" rel="noopener" href="https://github.com/DiUS/pact-jvm/tree/master/pact-jvm-consumer-junit#user-content-ensuring-all-items-in-a-list-match-an-example-220">官网的介绍</a>；</li>
+</ul>
+<h3 id="执行Miku端的测试"><a href="#执行Miku端的测试" class="headerlink" title="执行Miku端的测试"></a>执行Miku端的测试</h3><p>Test Case准备好后，我们就可以执行测试了。因为我们实际上是用的Junit的框架，所以和执行一般的单元测试是一样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-miku:clean test</span><br></pre></td></tr></table></figure>
+<p>成功执行后，你就可以在<code>Pacts\Miku</code>下面找到所有测试生成的契约文件。</p>
+<h3 id="发布契约文件到Pact-Broker"><a href="#发布契约文件到Pact-Broker" class="headerlink" title="发布契约文件到Pact Broker"></a>发布契约文件到Pact Broker</h3><p>契约文件，也就是<code>Pacts\Miku</code>下面的那些JSON文件，可以用来驱动Provider端的契约测试。由于我们的示例把Consumer和Provider都放在了同一个Codebase下面，所以<code>Pacts\Miku</code>下面的契约文件对Provider是直接可见的，而真实的项目中，往往不是这样，你需要通过某种途径把契约文件从Consumer端发送给Provider端。你可以选择把契约文件SCP到Provider的测试服务器去，也可以选择使用中间文件服务器来共享契约文件，你甚至可以直接人肉发邮件把契约文件扔给Provider的团队，然后告诉他们“这是我们的契约，你们看着办吧~”（当然，这样很Low …），这些都是可行的。显然，Pact提供了更加优雅的方式，那就是使用<a target="_blank" rel="noopener" href="https://github.com/pact-foundation/pact_broker">Pact Broker</a>。</p>
+<p>当你准备好Broker后，就可以用它来方便的实现真正的消费者驱动的契约测试了。</p>
+<blockquote>
+<p>好吧，我得承认，“准备”这两个字我用得有些轻描淡写，实际的情况是你可能需要费一番周折才能弄好一个Broker服务。目前有好些方法可以搭建Broker服务，你可以直接下载官网的源码然后自己折腾，也可以使用Docker来个一键了事，更可以直接找Pact官方申请一个公共的Broker，当然，那样做就得暴露你的契约给第三方服务器，真实的产品项目多半是不行的，但如果只是学习，那就事半功倍了，比如我们当前的这个示例就是如此。</p>
+</blockquote>
+<p>将契约文件上传到Broker服务器非常简单：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-miku:pactPublish</span><br></pre></td></tr></table></figure>
+<p>然后你会在命令行下面看到类似这样的输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :example-consumer-miku:pactPublish </span><br><span class="line">Publishing JunitDSLConsumer1-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitDSLJsonBodyConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitDSLLambdaJsonBodyConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing BaseConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitRuleConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitRuleMultipleInteractionsConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitDSLConsumer2-ExampleProvider.json ... HTTP/1.1 200 OK</span><br></pre></td></tr></table></figure>
+<p>上传完成之后，你就可以在我们的<a target="_blank" rel="noopener" href="https://ariman.pact.dius.com.au/">Broker服务器</a>上面看到对于的契约内容了。<br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/pact-broker.png" alt="image"></p>
+<blockquote>
+<p>值得说明的是，你可以看到上面我们有7个Consumer对应1个Provdier。在真实的项目中，不应该是这样的，因为现在我们实际上只有一个Consumer Miku。我只是在不同的契约文件中对Consumer的名字做了不同的命名，目的只是展示一下Broker的这个漂亮的调用关系图。这只是一个示例，仅此而已。</p>
+</blockquote>
+<p>至此，Pact测试中，Consumer端的工作我们就全部搞定了，剩下的就是Provider的活了。</p>
+<h3 id="Provider端的测试"><a href="#Provider端的测试" class="headerlink" title="Provider端的测试"></a>Provider端的测试</h3><p>在Provider端，我们使用Gradle的Plugin来执行契约测试，非常的简单，不需要写一行测试代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-provider:pactVerify</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>在Provider端执行契约测试之前，我们需要先启动Provider的应用。虽然通过gradle我们可以配置自动关停应用，但对于初学者，我还是建议大家多手动捣鼓捣鼓，不然你都不知道这个测试是怎么个跑法。啥？不知道怎么启动Provider？自己去本文的开头部分找去 …</p>
+</blockquote>
+<p>然后，你可以在命令行下面看到类似这样的输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">Arimans-MacBook-Pro:pact-jvm-example ariman$ ./gradlew :example-provider:pactVerify</span><br><span class="line"></span><br><span class="line">&gt; Task :example-provider:pactVerify_ExampleProvider</span><br><span class="line"></span><br><span class="line">Verifying a pact between Miku - Base contract and ExampleProvider</span><br><span class="line">  [Using File /Users/ariman/Workspace/Pacting/pact-jvm-example/Pacts/Miku/BaseConsumer-ExampleProvider.json]</span><br><span class="line">  Given</span><br><span class="line">         WARNING: State Change ignored as there is no stateChange URL</span><br><span class="line">  Consumer Miku</span><br><span class="line">    returns a response which</span><br><span class="line">      has status code 200 (OK)</span><br><span class="line">      includes headers</span><br><span class="line">        &quot;Content-Type&quot; with value &quot;application/json;charset=UTF-8&quot; (OK)</span><br><span class="line">      has a matching body (OK)</span><br><span class="line">  Given</span><br><span class="line">         WARNING: State Change ignored as there is no stateChange URL</span><br><span class="line">  Pact JVM example Pact interaction</span><br><span class="line">    returns a response which</span><br><span class="line">      has status code 200 (OK)</span><br><span class="line">      includes headers</span><br><span class="line">        &quot;Content-Type&quot; with value &quot;application/json;charset=UTF-8&quot; (OK)</span><br><span class="line">      has a matching body (OK)</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  Verifying a pact between JunitRuleMultipleInteractionsConsumer and ExampleProvider</span><br><span class="line">    [from Pact Broker https://ariman.pact.dius.com.au/pacts/provider/ExampleProvider/consumer/JunitRuleMultipleInteractionsConsumer/version/1.0.0]</span><br><span class="line">    Given</span><br><span class="line">           WARNING: State Change ignored as there is no stateChange URL</span><br><span class="line">    Miku</span><br><span class="line">      returns a response which</span><br><span class="line">        has status code 200 (OK)</span><br><span class="line">        includes headers</span><br><span class="line">          &quot;Content-Type&quot; with value &quot;application/json;charset=UTF-8&quot; (OK)</span><br><span class="line">        has a matching body (OK)</span><br><span class="line">    Given</span><br><span class="line">           WARNING: State Change ignored as there is no stateChange URL</span><br><span class="line">    Nanoha</span><br><span class="line">      returns a response which</span><br><span class="line">        has status code 200 (OK)</span><br><span class="line">        includes headers</span><br><span class="line">          &quot;Content-Type&quot; with value &quot;application/json;charset=UTF-8&quot; (OK)</span><br><span class="line">        has a matching body (OK)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>从上面的结果可以看出，我们的测试既使用了来自本地的契约文件，也使用了来自Broker的契约文件。</p>
+<blockquote>
+<p>由于我们示例使用的Broker服务器是公共的，任何调戏我们这个示例应用的小伙伴都能上传他们自己的契约文件，其中难免会存在错误的契约。所以，如果你发现来自Broker的契约让你的测试挂掉了，请不要惊慌哟。当然，因为是公共服务器，我会不定时的清空里面的契约文件，所以哪天你要是发现你之前上传的契约文件没有了，也不必大惊小怪。</p>
+</blockquote>
+<h2 id="相关的Gradle配置"><a href="#相关的Gradle配置" class="headerlink" title="相关的Gradle配置"></a>相关的Gradle配置</h2><p>OK，Provider和Miku感情故事我们就讲完了。在讲Nanoha之前，先让我们来看看Gradle的一些配置内容：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line">project(<span class="string">&#x27;:example-consumer-miku&#x27;</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">    test &#123;</span><br><span class="line">        systemProperties[<span class="string">&#x27;pact.rootDir&#x27;</span>] = <span class="string">&quot;$rootDir/Pacts/Miku&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pact &#123;</span><br><span class="line">            publish &#123;</span><br><span class="line">                pactDirectory = <span class="string">&quot;$rootDir/Pacts/Miku&quot;</span></span><br><span class="line">                pactBrokerUrl = mybrokerUrl</span><br><span class="line">                pactBrokerUsername = mybrokerUser</span><br><span class="line">                pactBrokerPassword = mybrokerPassword</span><br><span class="line">            &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">project(<span class="string">&#x27;:example-consumer-nanoha&#x27;</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">    test &#123;</span><br><span class="line">        systemProperties[<span class="string">&#x27;pact.rootDir&#x27;</span>] = <span class="string">&quot;$rootDir/Pacts/Nanoha&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.net.URL</span><br><span class="line"></span><br><span class="line">project(<span class="string">&#x27;:example-provider&#x27;</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">    pact &#123;</span><br><span class="line">            serviceProviders &#123;</span><br><span class="line">                ExampleProvider &#123;</span><br><span class="line">                    protocol = <span class="string">&#x27;http&#x27;</span></span><br><span class="line">                    host = <span class="string">&#x27;localhost&#x27;</span></span><br><span class="line">                    port = <span class="number">8080</span></span><br><span class="line">                    path = <span class="string">&#x27;/&#x27;</span></span><br><span class="line"></span><br><span class="line">                    <span class="comment">// Test Pacts from local Miku</span></span><br><span class="line">                    hasPactWith(<span class="string">&#x27;Miku - Base contract&#x27;</span>) &#123;</span><br><span class="line">                        pactSource = file(<span class="string">&quot;$rootDir/Pacts/Miku/BaseConsumer-ExampleProvider.json&quot;</span>)</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    hasPactsWith(<span class="string">&#x27;Miku - All contracts&#x27;</span>) &#123;</span><br><span class="line">                        pactFileLocation = file(<span class="string">&quot;$rootDir/Pacts/Miku&quot;</span>)</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// Test Pacts from Pact Broker</span></span><br><span class="line">                    hasPactsFromPactBroker(mybrokerUrl, <span class="attr">authentication:</span> [<span class="string">&#x27;Basic&#x27;</span>, mybrokerUser, mybrokerPassword])</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// Test Pacts from local Nanoha</span></span><br><span class="line">    <span class="comment">//                hasPactWith(&#x27;Nanoha - With Nantionality&#x27;) &#123;</span></span><br><span class="line">    <span class="comment">//                    pactSource = file(&quot;$rootDir/Pacts/Nanoha/ConsumerNanohaWithNationality-ExampleProvider.json&quot;)</span></span><br><span class="line">    <span class="comment">//                &#125;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">//                hasPactWith(&#x27;Nanoha - No Nantionality&#x27;) &#123;</span></span><br><span class="line">    <span class="comment">//                    stateChangeUrl = new URL(&#x27;http://localhost:8080/pactStateChange&#x27;)</span></span><br><span class="line">    <span class="comment">//                    pactSource = file(&quot;$rootDir/Pacts/Nanoha/ConsumerNanohaNoNationality-ExampleProvider.json&quot;)</span></span><br><span class="line">    <span class="comment">//                &#125;</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>Gradle的配置也是非常的简单的，Provider，Miku和Nanoha作为三个单独的应用，都是独立配置的，其中的一些关键信息：</p>
+<ul>
+<li><code>systemProperties[&#39;pact.rootDir&#39;]</code> 指定了我们生成契约文件的路径；</li>
+<li>Miku中的<code>pact &#123; ... &#125;</code>定义了我们Pact Broker的服务器地址，以及我们访问时需要的认证信息。<blockquote>
+<p>如果你想通过浏览器访问Broker，比如看上面的关系图，你也是需要这个认证信息的。这里的配置使用的是变量，真正的用户名和密码在哪儿？不告诉你，自己在代码里面找找吧(￣▽￣)~*</p>
+</blockquote>
+</li>
+<li>Provider的<code>hasPactWith()</code>和<code>hasPactsWith()</code>指定了执行<code>PactVerify</code>时会去搜索的本地路径，相应的，<code>hasPactsFromPactBroker</code>则是指定了Broker的服务器地址；</li>
+<li>为什么要注释掉Nanoha的契约文件路径呢？因为目前我们还没有生成Nanoha的契约文件，如果不注释掉它们的话，测试会报找不到文件的错误。我们可以在之后生成完Nanoha的契约文件后，再打开注释；</li>
+</ul>
+<h2 id="Provider与Nanoha间的契约测试"><a href="#Provider与Nanoha间的契约测试" class="headerlink" title="Provider与Nanoha间的契约测试"></a>Provider与Nanoha间的契约测试</h2><p>Nanoha端的契约测试和Miku端大同小异，只是我们会在Nanoha端使用ProviderState的特性。关于ProviderState的具体含义，大家可以参见<a target="_blank" rel="noopener" href="https://docs.pact.io/documentation/provider_states.html">官网的介绍</a>.</p>
+<h3 id="准备Provider端的ProviderState"><a href="#准备Provider端的ProviderState" class="headerlink" title="准备Provider端的ProviderState"></a>准备Provider端的ProviderState</h3><p>Provider会返回一个<code>.nationality</code>的字段，在真实项目里，它的值可能来自数据库（当然，也可能来自更下一层的API调用）。在我们的示例里面，简单起见，直接使用了Static的属性来模拟数据的存储：<br><code>provider.ulti.Nationality</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Nationality</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String nationality = <span class="string">&quot;Japan&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> String <span class="title">getNationality</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> nationality;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">setNationality</span><span class="params">(String nationality)</span> </span>&#123;</span><br><span class="line">        Nationality.nationality = nationality;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后，通过修改<code>.nationality</code>就可以模拟对存储数据的修改。所以，我们定义了一个控制器<code>pactController</code>，在<code>/pactStateChange</code>上面接受POST的reqeust来修改<code>.nationality</code>：<br><code>provider.PactController</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Profile(&quot;pact&quot;)</span></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PactController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequestMapping(value = &quot;/pactStateChange&quot;, method = RequestMethod.POST)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">providerState</span><span class="params">(<span class="meta">@RequestBody</span> PactState body)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">switch</span> (body.getState()) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;No nationality&quot;</span>:</span><br><span class="line">                Nationality.setNationality(<span class="keyword">null</span>);</span><br><span class="line">                System.out.println(<span class="string">&quot;Pact State Change &gt;&gt; remove nationality ...&quot;</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">&quot;Default nationality&quot;</span>:</span><br><span class="line">                Nationality.setNationality(<span class="string">&quot;Japan&quot;</span>);</span><br><span class="line">                System.out.println(<span class="string">&quot;Pact Sate Change &gt;&gt; set default nationality ...&quot;</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为这个控制器只是用来测试的，所以它应该<strong>只在非产品环境下才能可见</strong>，所以我们使用了一个<code>pact</code>的Profile Annotation来限制这个控制器只能在使用<code>pact</code>的profile时才能可见。</p>
+<p><strong>OK，总结一下就是：当Provider使用<code>pact</code>的profile运行时，它会在URL<code>/pactStateChange</code>上接受一个POST请求，来修改<code>.nationality</code>的值，再具体一些，可以被设置成默认值Japan，或者null。</strong></p>
+<h3 id="Nanoha端的契约测试"><a href="#Nanoha端的契约测试" class="headerlink" title="Nanoha端的契约测试"></a>Nanoha端的契约测试</h3><p>Nanoha端的测试文件和Miku端的差不多，我们使用Lambda DSL，在一个文件里面写两个TestCase。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NationalityPactTest</span> </span>&#123;</span><br><span class="line">    PactSpecVersion pactSpecVersion;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">checkResult</span><span class="params">(PactVerificationResult result)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (result <span class="keyword">instanceof</span> PactVerificationResult.Error) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(((PactVerificationResult.Error)result).getError());</span><br><span class="line">        &#125;</span><br><span class="line">        assertEquals(PactVerificationResult.Ok.INSTANCE, result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testWithNationality</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        DslPart body = newJsonBody((root) -&gt; &#123;</span><br><span class="line">            root.numberType(<span class="string">&quot;salary&quot;</span>);</span><br><span class="line">            root.stringValue(<span class="string">&quot;fullName&quot;</span>, <span class="string">&quot;Takamachi Nanoha&quot;</span>);</span><br><span class="line">            root.stringValue(<span class="string">&quot;nationality&quot;</span>, <span class="string">&quot;Japan&quot;</span>);</span><br><span class="line">            root.object(<span class="string">&quot;contact&quot;</span>, (contactObject) -&gt; &#123;</span><br><span class="line">                contactObject.stringMatcher(<span class="string">&quot;Email&quot;</span>, <span class="string">&quot;.*@ariman.com&quot;</span>, <span class="string">&quot;takamachi.nanoha@ariman.com&quot;</span>);</span><br><span class="line">                contactObject.stringType(<span class="string">&quot;Phone Number&quot;</span>, <span class="string">&quot;9090940&quot;</span>);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;).build();</span><br><span class="line"></span><br><span class="line">        RequestResponsePact pact = ConsumerPactBuilder</span><br><span class="line">            .consumer(<span class="string">&quot;ConsumerNanohaWithNationality&quot;</span>)</span><br><span class="line">            .hasPactWith(<span class="string">&quot;ExampleProvider&quot;</span>)</span><br><span class="line">            .given(<span class="string">&quot;&quot;</span>)</span><br><span class="line">            .uponReceiving(<span class="string">&quot;Query fullName is Nanoha&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Nanoha&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">            .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(body)</span><br><span class="line">            .toPact();</span><br><span class="line"></span><br><span class="line">        MockProviderConfig config = MockProviderConfig.createDefault(<span class="keyword">this</span>.pactSpecVersion.V3);</span><br><span class="line">        PactVerificationResult result = runConsumerTest(pact, config, mockServer -&gt; &#123;</span><br><span class="line">            ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">            providerHandler.setBackendURL(mockServer.getUrl());</span><br><span class="line">            Information information = providerHandler.getInformation();</span><br><span class="line">            assertEquals(information.getName(), <span class="string">&quot;Takamachi Nanoha&quot;</span>);</span><br><span class="line">            assertEquals(information.getNationality(), <span class="string">&quot;Japan&quot;</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        checkResult(result);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">testNoNationality</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, String&gt; headers = <span class="keyword">new</span> HashMap&lt;String, String&gt;();</span><br><span class="line">        headers.put(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line"></span><br><span class="line">        DslPart body = newJsonBody((root) -&gt; &#123;</span><br><span class="line">            root.numberType(<span class="string">&quot;salary&quot;</span>);</span><br><span class="line">            root.stringValue(<span class="string">&quot;fullName&quot;</span>, <span class="string">&quot;Takamachi Nanoha&quot;</span>);</span><br><span class="line">            root.stringValue(<span class="string">&quot;nationality&quot;</span>, <span class="keyword">null</span>);</span><br><span class="line">            root.object(<span class="string">&quot;contact&quot;</span>, (contactObject) -&gt; &#123;</span><br><span class="line">                contactObject.stringMatcher(<span class="string">&quot;Email&quot;</span>, <span class="string">&quot;.*@ariman.com&quot;</span>, <span class="string">&quot;takamachi.nanoha@ariman.com&quot;</span>);</span><br><span class="line">                contactObject.stringType(<span class="string">&quot;Phone Number&quot;</span>, <span class="string">&quot;9090940&quot;</span>);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;).build();</span><br><span class="line"></span><br><span class="line">        RequestResponsePact pact = ConsumerPactBuilder</span><br><span class="line">            .consumer(<span class="string">&quot;ConsumerNanohaNoNationality&quot;</span>)</span><br><span class="line">            .hasPactWith(<span class="string">&quot;ExampleProvider&quot;</span>)</span><br><span class="line">            .given(<span class="string">&quot;No nationality&quot;</span>)</span><br><span class="line">            .uponReceiving(<span class="string">&quot;Query fullName is Nanoha&quot;</span>)</span><br><span class="line">                .path(<span class="string">&quot;/information&quot;</span>)</span><br><span class="line">                .query(<span class="string">&quot;fullName=Nanoha&quot;</span>)</span><br><span class="line">                .method(<span class="string">&quot;GET&quot;</span>)</span><br><span class="line">            .willRespondWith()</span><br><span class="line">                .headers(headers)</span><br><span class="line">                .status(<span class="number">200</span>)</span><br><span class="line">                .body(body)</span><br><span class="line">            .toPact();</span><br><span class="line"></span><br><span class="line">        MockProviderConfig config = MockProviderConfig.createDefault(<span class="keyword">this</span>.pactSpecVersion.V3);</span><br><span class="line">        PactVerificationResult result = runConsumerTest(pact, config, mockServer -&gt; &#123;</span><br><span class="line">            ProviderHandler providerHandler = <span class="keyword">new</span> ProviderHandler();</span><br><span class="line">            providerHandler.setBackendURL(mockServer.getUrl());</span><br><span class="line">            Information information = providerHandler.getInformation();</span><br><span class="line">            assertEquals(information.getName(), <span class="string">&quot;Takamachi Nanoha&quot;</span>);</span><br><span class="line">            assertEquals(information.getNationality(), <span class="keyword">null</span>);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        checkResult(result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这两个TestCase的主要区别是：</p>
+<ul>
+<li>我们对<code>nationality</code>的期望一个Japan，一个是null；</li>
+<li>通过<code>.given()</code>方法来指定我们的ProviderState，从而控制在Provider端运行测试之前修改对应<code>nationality</code>的值；</li>
+</ul>
+<p>Consumer端运行测试的方式还是一样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-nanoha:clean test</span><br></pre></td></tr></table></figure>
+<p>然后，就可以在<code>Pacts\Nanoha</code>路径下面找到生成的契约文件了。</p>
+<h3 id="Provider端的契约测试"><a href="#Provider端的契约测试" class="headerlink" title="Provider端的契约测试"></a>Provider端的契约测试</h3><h4 id="启动Provider的应用"><a href="#启动Provider的应用" class="headerlink" title="启动Provider的应用"></a>启动Provider的应用</h4><p>上面我们提到，运行Provider需要使用<code>pact</code>的profile，所以现在启动Provider的命令会有所不同：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export SPRING_PROFILES_ACTIVE=pact</span><br><span class="line">./gradlew :example-provider:bootRun</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>如果你之前已经启动了Provider，记得要kill掉哟，不然会端口占用的啦~</p>
+</blockquote>
+<h4 id="修改Gradle配置文件"><a href="#修改Gradle配置文件" class="headerlink" title="修改Gradle配置文件"></a>修改Gradle配置文件</h4><p>我们在Consumer的契约中，使用<code>.given()</code>指定了ProviderState，但说到底，那里指定的只是一个字符串而已，真正干活的，还是Gradle，所以我们需要Gradle的相关配置：<br><code>build.gralde</code></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">hasPactWith(<span class="string">&#x27;Nanoha - With Nantionality&#x27;</span>) &#123;</span><br><span class="line">    pactSource = file(<span class="string">&quot;$rootDir/Pacts/Nanoha/ConsumerNanohaWithNationality-ExampleProvider.json&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">hasPactWith(<span class="string">&#x27;Nanoha - No Nantionality&#x27;</span>) &#123;</span><br><span class="line">    stateChangeUrl = <span class="keyword">new</span> URL(<span class="string">&#x27;http://localhost:8080/pactStateChange&#x27;</span>)</span><br><span class="line">    pactSource = file(<span class="string">&quot;$rootDir/Pacts/Nanoha/ConsumerNanohaNoNationality-ExampleProvider.json&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里，我们取消了之前对Nanoha的注释。第一个TestCase我们会测试使用默认的nationality=Japan。第二个TestCase，我们指定了<code>stateChangeUrl</code>，它会保证在测试运行之前，先发送一个POST请求给这个URL，然后我们的TestCase测试nationality=null。</p>
+<h4 id="执行契约测试"><a href="#执行契约测试" class="headerlink" title="执行契约测试"></a>执行契约测试</h4><p>同样的方法执行契约测试：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-provider:pactVerify</span><br></pre></td></tr></table></figure>
+<p>然后你就可以在命令行下面看见对应的输出了。</p>
+<h2 id="验证我们的测试"><a href="#验证我们的测试" class="headerlink" title="验证我们的测试"></a>验证我们的测试</h2><p>如果你一字不漏的玩儿到了这里，那么恭喜你，你应该可以在自己的项目里去实践Pact了（好了，那个抄椅子的同学，你不用说了，我知道，你们用的是Python╮(╯_╰)╭）。</p>
+<p>但是在离开本示例之前，还是发扬一下我们的测试精神吧，比如，搞点小破坏~</p>
+<p>在Provider返回的body里面，Miku和Nanoha都有使用字段<code>.name</code>。如果某天，Provider想把<code>.name</code>改成<code>.fullname</code>，估计Miku和Nanoha就要跪了。这是一种经典的契约破坏场景，用来做我们的玩儿法再适合不过了。可是要那么玩儿的话，需要修改Provider的好些代码，想必不少测试的同学，特别是对Spring Boot不了解的同学就又要拍砖了。</p>
+<p>所以还是让我们来个简单的吧，比如霸王硬上弓，直接把<code>.name</code>给miku了，哦，不对，是null了。<br><code>provider.InformationController</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InformationController</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        information.setName(<span class="keyword">null</span>);</span><br><span class="line">        <span class="keyword">return</span> information;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>喂，喂，干坐着干嘛，动手改呀！这行代码可是需要你们自己加上去的哟，即便它已经简单到只有一行。然后，那个写Python的，别告诉我你看不懂<code>information.setName(null)</code>，Okay？￣▽￣</p>
+</blockquote>
+<p>最后，重新运行我们的契约测试，你就能看到一些长得像这样的东东啦~：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line">Verifying a pact between Nanoha - No Nantionality and ExampleProvider</span><br><span class="line">  [Using File /Users/ariman/Workspace/Pacting/pact-jvm-example/Pacts/Nanoha/ConsumerNanohaNoNationality-ExampleProvider.json]</span><br><span class="line">  Given No nationality</span><br><span class="line">  Query name is Nanoha</span><br><span class="line">    returns a response which</span><br><span class="line">      has status code 200 (OK)</span><br><span class="line">      includes headers</span><br><span class="line">        &quot;Content-Type&quot; with value &quot;application/json;charset=UTF-8&quot; (OK)</span><br><span class="line">      has a matching body (FAILED)</span><br><span class="line"></span><br><span class="line">Failures:</span><br><span class="line"></span><br><span class="line">0) Verifying a pact between Miku - Base contract and ExampleProvider - Pact JVM example Pact interactionVerifying a pact between Miku - Base contract and ExampleProvider - Pact JVM example Pact interaction Given  returns a response which has a matching body</span><br><span class="line">      $.name -&gt; Expected &#x27;Hatsune Miku&#x27; but received null</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/" rel="next" title="契约测试之核心解惑">
+      契约测试之核心解惑 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E6%BA%90%E7%A0%81"><span class="nav-number">1.</span> <span class="nav-text">示例源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E5%BA%94%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">示例应用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Provider"><span class="nav-number">2.1.</span> <span class="nav-text">Provider</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85-Miku-amp-Nanoha"><span class="nav-number">2.2.</span> <span class="nav-text">消费者 Miku &amp; Nanoha</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Provider%E4%B8%8EMiku%E9%97%B4%E7%9A%84%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">Provider与Miku间的契约测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E6%B6%88%E8%B4%B9%E8%80%85Miku%E7%AB%AF%E7%9A%84%E6%B5%8B%E8%AF%95%E6%A1%88%E4%BE%8B"><span class="nav-number">3.1.</span> <span class="nav-text">编写消费者Miku端的测试案例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%9A%84Junit"><span class="nav-number">3.1.1.</span> <span class="nav-text">基本的Junit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Junit-Rule"><span class="nav-number">3.1.2.</span> <span class="nav-text">Junit Rule</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Junit-DSL"><span class="nav-number">3.1.3.</span> <span class="nav-text">Junit DSL</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8CMiku%E7%AB%AF%E7%9A%84%E6%B5%8B%E8%AF%95"><span class="nav-number">3.2.</span> <span class="nav-text">执行Miku端的测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E5%B8%83%E5%A5%91%E7%BA%A6%E6%96%87%E4%BB%B6%E5%88%B0Pact-Broker"><span class="nav-number">3.3.</span> <span class="nav-text">发布契约文件到Pact Broker</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Provider%E7%AB%AF%E7%9A%84%E6%B5%8B%E8%AF%95"><span class="nav-number">3.4.</span> <span class="nav-text">Provider端的测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E7%9A%84Gradle%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">相关的Gradle配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Provider%E4%B8%8ENanoha%E9%97%B4%E7%9A%84%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95"><span class="nav-number">5.</span> <span class="nav-text">Provider与Nanoha间的契约测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87Provider%E7%AB%AF%E7%9A%84ProviderState"><span class="nav-number">5.1.</span> <span class="nav-text">准备Provider端的ProviderState</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nanoha%E7%AB%AF%E7%9A%84%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95"><span class="nav-number">5.2.</span> <span class="nav-text">Nanoha端的契约测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Provider%E7%AB%AF%E7%9A%84%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95"><span class="nav-number">5.3.</span> <span class="nav-text">Provider端的契约测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8Provider%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">5.3.1.</span> <span class="nav-text">启动Provider的应用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9Gradle%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">5.3.2.</span> <span class="nav-text">修改Gradle配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95"><span class="nav-number">5.3.3.</span> <span class="nav-text">执行契约测试</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E6%88%91%E4%BB%AC%E7%9A%84%E6%B5%8B%E8%AF%95"><span class="nav-number">6.</span> <span class="nav-text">验证我们的测试</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ariman</p>
+  <div class="site-description" itemprop="description">微服务 自动化测试 契约测试</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ariman</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":120,"height":350,"hOffset":-10,"vOffset":-150},"mobile":{"show":true},"react":{"opacity":1}});</script></body>
+</html>

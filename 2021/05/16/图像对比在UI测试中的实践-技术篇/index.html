@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="什么是UI测试中的图像对比首先唠叨一下什么是UI测试，顾名思义，UI测试就是泛指对UI的测试工作。UI又分图形化UI和非图形化UI，即Graphic User Interface和Non-Graphic User Interface，常见的GUI主要有Web页面、移动应用界面、桌面应用界面、以及嵌入式设备的图形界面等。而非图形化用户界面则主要是各种命令行终端程序，比如docker，xcrun，ku">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图像对比在UI测试中的实践-技术篇">
+<meta property="og:url" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/index.html">
+<meta property="og:site_name" content="Ariman&#39;s Lazy Blog">
+<meta property="og:description" content="什么是UI测试中的图像对比首先唠叨一下什么是UI测试，顾名思义，UI测试就是泛指对UI的测试工作。UI又分图形化UI和非图形化UI，即Graphic User Interface和Non-Graphic User Interface，常见的GUI主要有Web页面、移动应用界面、桌面应用界面、以及嵌入式设备的图形界面等。而非图形化用户界面则主要是各种命令行终端程序，比如docker，xcrun，ku">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-0.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-1.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-diff.png">
+<meta property="og:image" content="https://miro.medium.com/max/1400/1*IVU4ZvGdUvSSccHIvpVvVQ.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/interactive-visual-testing.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/batch-visual-testing.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-1.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-2.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-3.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-4.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/test-in-container.png">
+<meta property="article:published_time" content="2021-05-16T01:05:51.000Z">
+<meta property="article:modified_time" content="2021-05-16T06:36:36.923Z">
+<meta property="article:author" content="Ariman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-0.png">
+
+<link rel="canonical" href="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>图像对比在UI测试中的实践-技术篇 | Ariman's Lazy Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143312940-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-143312940-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ariman's Lazy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          图像对比在UI测试中的实践-技术篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-05-16 09:05:51 / 修改时间：14:36:36" itemprop="dateCreated datePublished" datetime="2021-05-16T09:05:51+08:00">2021-05-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="什么是UI测试中的图像对比"><a href="#什么是UI测试中的图像对比" class="headerlink" title="什么是UI测试中的图像对比"></a>什么是UI测试中的图像对比</h2><p>首先唠叨一下什么是UI测试，顾名思义，UI测试就是泛指对UI的测试工作。UI又分图形化UI和非图形化UI，即Graphic User Interface和Non-Graphic User Interface，常见的GUI主要有Web页面、移动应用界面、桌面应用界面、以及嵌入式设备的图形界面等。而非图形化用户界面则主要是各种命令行终端程序，比如docker，xcrun，kubectl等。我们这里讨论的UI，限定在GUI的范畴内，严谨的同学就别挑刺儿了哟。</p>
+<p>对UI的测试，又可以分为功能性的测试和非功能性的测试。功能测试主要关注应用的业务实现，非功能测试则关注业务实现之外的其它方面，比如安全性、性能、易用性、兼容性等。那图像对比在UI测试中扮演怎样的角色呢？</p>
+<p>我们先来看看下面这个，白宫官网的页脚:</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-0.png" alt="wh-0"></p>
+<p>然后，同样是白宫官网的页脚：</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-1.png" alt="wh-1"></p>
+<p>你能一眼看出它们的区别吗？比较困难是吧，那如果再给你提供下面这个呢：</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/wh-diff.png" alt="wh-diff"></p>
+<p>是不是瞬间就能发现它们之间的差异了。然后我们来仔细品味一下它俩的差异，最上面白宫图标的粗细变化，我们可以认为是截图噪音而忽略不计，那么左下角的单词错误，应该是文本的错别字，不涉及功能，属于用户体验的问题。而右下角缺失YouTube图标，则是实打实的功能缺陷。所以，图像对比在UI测试中并不是某种具体的专项测试，而是一种辅助手段，帮助我们方便快捷地定位各种可以被其捕获的、泛化的UI异常。</p>
+<p>当然，称呼“UI测试中的图像对比”实在太拗口，所以平常交流中，更多的是使用它的英文及其译名，即Visual Testing和”视觉测试”。</p>
+<h2 id="图像对比在UI测试中的价值"><a href="#图像对比在UI测试中的价值" class="headerlink" title="图像对比在UI测试中的价值"></a>图像对比在UI测试中的价值</h2><p>在UI测试、特别是UI自动化测试中应用图像对比能够带来非常直观的价值，它们包括：</p>
+<ul>
+<li>替代自动化测试中的断言语句，提高自动化测试的维护效率和测试执行的稳定性；</li>
+<li>实现对图表等绘图元素的回归测试；</li>
+<li>能够捕获意料之外的UI异常；</li>
+<li>更加适应敏捷项目中UI的频繁变更；</li>
+<li>更好的描述UI的变化；</li>
+</ul>
+<h3 id="替代自动化测试中的断言语句，提高自动化测试的维护效率和测试执行的稳定性"><a href="#替代自动化测试中的断言语句，提高自动化测试的维护效率和测试执行的稳定性" class="headerlink" title="替代自动化测试中的断言语句，提高自动化测试的维护效率和测试执行的稳定性"></a>替代自动化测试中的断言语句，提高自动化测试的维护效率和测试执行的稳定性</h3><p>长久以来，UI自动化测试中的测试期望都是通过断言语句来实现的，比如</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cy.get(<span class="string">&#x27;div.main-content-article-wrapper &gt; article &gt; div &gt; div:nth-child(34)&#x27;</span>).should(<span class="string">&#x27;contain&#x27;</span>, <span class="string">&#x27;Price&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>期望一个特定位置的元素内容应该包含’Price’，但如果页面重构，变成了</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cy.get(<span class="string">&#x27;div.main-content-article-wrapper &gt; article &gt; div:nth-child(34)&#x27;</span>).should(<span class="string">&#x27;contain&#x27;</span>, <span class="string">&#x27;Price&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<p>那我们的自动化测试就会失败。相信凡是写过UI自动化测试的同学，都遇到过类似的问题，即我们对特定元素的断言，都依赖其相应的元素定位器，如果UI界面发生了结构性的调整（这些调整有时对用户还是无感的），已有的元素定位器很容易受影响。特别是当需要断言的页面元素很多时，这样的重构往往是UI自动化测试的噩梦。</p>
+<p>而图像对比完全不需要使用断言语句来校验页面元素的特征，从而可以大幅简化使用断言语句的工作量，并且极大的提高执行自动化测试的稳定性，特别是对于那些内容丰富的页面，无论是校验的工作量、还是校验的稳定性，都远远优于传统的断言语句。</p>
+<h3 id="实现对图表等绘图元素的回归测试"><a href="#实现对图表等绘图元素的回归测试" class="headerlink" title="实现对图表等绘图元素的回归测试"></a>实现对图表等绘图元素的回归测试</h3><p>另一个“长久以来”，对绘图元素的回归校验始终是UI自动化测试中的痛点。前端获取后端提供的数据，使用Javascript和CSS动态地将其绘制在UI界面上，面对这些圈圈点点、条条框框，传统的UI自动化测试，无论是爷爷辈儿的Selenium、还是高富帅的Cypress，都只能望图心叹，而唯独图像对比可以“以图攻图”。这对于那些需要展示图形报表的应用，比如大数据前端，是非常有益的。</p>
+<h3 id="能够捕获意料之外的UI异常"><a href="#能够捕获意料之外的UI异常" class="headerlink" title="能够捕获意料之外的UI异常"></a>能够捕获意料之外的UI异常</h3><p>这是我对图像对比在UI自动化测试中最赞赏的价值！<br>传统的、基于断言的UI自动化测试，只能做到“期望A在B有C的表现”，即只能期望某事按照希望的方式发生，可捕获的异常仅仅是“期望的事件没有发生”。而在此基础上，使用图像对比的UI自动化测试还能期望“不希望的事情不要发生”，即对于那些无中生有、完全意料之外的UI异常也能进行捕获。</p>
+<p>曾经的一个客户项目，项目的产品是一个微前端，上线后会被嵌入到上一层的页面当中。某次，我们的图像对比测试在UAT测试环境中意外的发现，自己页面的某个widget居然被替换成了广告，整个团队大吃一惊，因为我们根本就没干过“这活儿”。经过几番技术调研和需求确认，最终才知道这是我们被要求引入的某个上层页面的Javascript“偷偷修改”的，而且是正确的业务需求。当时的那个广告很显眼，容易被人肉捕捉到，但如果是某个不起眼的小改动呢，常规的自动化测试方式都束手无策，即便是单元级别的snapshot测试也做不到，因为它是在部署后才会出现的”问题”。</p>
+<h4 id="更加适应敏捷项目中UI的频繁变更"><a href="#更加适应敏捷项目中UI的频繁变更" class="headerlink" title="更加适应敏捷项目中UI的频繁变更"></a>更加适应敏捷项目中UI的频繁变更</h4><p>对于UI自动化测试，有一条金句：“只在UI稳定后再进行自动化回归测试”。而对于敏捷项目来说，不好意思，UI稳定的那一天多半就是上线的那一天。UI的频繁变更，对于自动化测试来说，主要考验的是咋们的体力和（忍）耐力，看你有没有足够的体力、三天两头的跟着UI变更来修改你的测试案例，以及面对一言不合就红红火火的pipeline、你能憋着多久不拍桌骂娘。而使用图像对比的UI自动化测试，虽然不能完全解除你发飙的风险，但得益于对断言需求的大量降低、以及图像对比服务的一键rebase，至少能让你每天少灭亡5000单位的脑细胞（大误），阿弥陀佛，善哉善哉！</p>
+<h4 id="更好的描述UI的变化"><a href="#更好的描述UI的变化" class="headerlink" title="更好的描述UI的变化"></a>更好的描述UI的变化</h4><p>这一点，我坦白，很主观。当UI出现变化、需要跟Dev或BA去确认时，相较于查看日志或报告中的描述语言，我更喜欢眼见为实和看图说话。当然，随着自动失败截图和视频录制功能的丰富，像Cypress、Detox这样的测试工具，在这方面也做得很不错。</p>
+<p>值得强调的是，尽管再高效和准确，图像对比也只是UI测试中的一种辅助手段，单独依靠图像对比是无法独立完成整个UI自动化测试的，我们仍然需要Selenium、Cypress那样的测试工具和框架来对浏览器和页面进行基本的操作，比如打开一个网站、填写某个表单、点击一些按钮等等。所以，图像对比是高效UI自动化测试的助推器，但并不是全部。</p>
+<h2 id="图像对比在UI测试中的自动化实施模式"><a href="#图像对比在UI测试中的自动化实施模式" class="headerlink" title="图像对比在UI测试中的自动化实施模式"></a>图像对比在UI测试中的自动化实施模式</h2><p>图像对比是一种高效的测试手段，理念非常清晰、简单。在具体的UI自动化测试中，图像对比的实施基本都遵循相同的模式，如下图：</p>
+<p><img src="https://miro.medium.com/max/1400/1*IVU4ZvGdUvSSccHIvpVvVQ.png" alt="visual-test-pattern"></p>
+<p>其中：</p>
+<ul>
+<li>初始化baseline的步骤一定是手动的，而且也是必须的；</li>
+<li>图像对比和差异报告是自动完成的；</li>
+<li>差异判定目前基本都是手动完成的，自动化能做的仅仅是发现差异，但差异并不等于缺陷，对于设计变更、新的需求、以及既有缺陷修复带来的UI差异，都是业务的正确表现；</li>
+<li>显而易见，更新baseline的步骤也一定是手动的，当报告的差异属于正确的业务表现时，就应该将当前版本的UI截图设置为最新的baseline，否则后续测试会继续沿用之前的baseline；</li>
+</ul>
+<h2 id="当前的自动化图像对比方案"><a href="#当前的自动化图像对比方案" class="headerlink" title="当前的自动化图像对比方案"></a>当前的自动化图像对比方案</h2><p>如今的视觉测试工具已经非常多了，<a target="_blank" rel="noopener" href="https://github.com/mojoaxel/awesome-regression-testing">这里</a>罗列了目前市面上绝大多数的相关工具。他们的主要区别在于：</p>
+<ul>
+<li>获取途径，开源 vs 商业；</li>
+<li>实现方案，工具&amp;框架型 vs 服务型；</li>
+<li>测试流程，交互式 vs 批处理式；</li>
+</ul>
+<p>商业和开源的区别不必多说。开源软件绝大多数都是本地工具或框架型的实现方案，服务型的实现方案主要集中在各种商业服务中，比如领头羊的Applitools就是远程服务型解决方案，非常类似于BroswerStack。</p>
+<p>无论是工具型的实现方案（以下简称视觉测试工具）、还是服务型的实现方案（以下简称视觉测试服务），它们都遵循上面提到的自动化实施模式，UI操作和截图都发生在执行功能测试的本地环境。两者的关键区别在于图片的对比和Baseline的管理，一个是发生在本地环境，一个是发生在远端服务内。具体来讲，当测试获取到UI的截图后，视觉测试工具会将截图与本地的Baseline进行比较，得出差异报告，需要更新的Baseline也保存在本地环境。而使用视觉测试服务时，截图会被上传到远端的视觉测试服务，在服务端完成图片对比，当需要更新Baseline时，也是在服务端保存新的Baseline。</p>
+<h3 id="本地视觉测试工具-vs-远端视觉测试服务"><a href="#本地视觉测试工具-vs-远端视觉测试服务" class="headerlink" title="本地视觉测试工具 vs 远端视觉测试服务"></a>本地视觉测试工具 vs 远端视觉测试服务</h3><p>大量的实践告诉我们，UI测试中使用远端视觉测试服务要远远优于使用本地视觉测试工具，主要体现在：</p>
+<h4 id="Baseline的管理和共享"><a href="#Baseline的管理和共享" class="headerlink" title="Baseline的管理和共享"></a>Baseline的管理和共享</h4><p>视觉测试工具将Baseline保存在本地环境，如果是一直个人使用，并没有多大问题，但如果要多人共享，麻烦就来了。以网页应用为例，图像都是来自于浏览器对应用界面渲染的结果，如果两个人的操作系统、浏览器版本、显示器分辨率等不同，即便面对相同UI，也可能得出不一致的图像。A、B分别在各自的电脑上、使用各自的Baseline通过了视觉测试，但最终发现两人的Baseline其实并不相同。当然，这里的差异更多属于噪音，但对于像素级别的图像对比来说，这样的噪音是难以忽略的。</p>
+<p>所以，对于本地视觉测试工具来说，一种变通的使用方式就是将Baseline保存在代码的版本管理系统内，然后让组员共享相同的Baseline。该方式可行，但使用代码管理系统来存储二进制的图片文件、而且还是经常变动的图片文件，其本身并不是一种好的工程实践。</p>
+<p>而视觉测试服务则完全不存在这样的问题，因为Baseline都是保存在服务端的，共享使用完全没有任何问题。</p>
+<h4 id="更新Baseline的难易程度"><a href="#更新Baseline的难易程度" class="headerlink" title="更新Baseline的难易程度"></a>更新Baseline的难易程度</h4><p>图像对比替代语句断言的优势之一就是能更好的适应被测UI的频繁变更，这就要求图像对比能够更好的频繁更新Baseline。视觉测试工具一般使用单独的命令来更新Baseline，集成到持续集成环境后，则通常需要设定一个单独的Job来执行该命令。如果使用了版本管理系统来存储Baseline，那还得将本地的Baseline上传回版本管理系统才能完成整个操作。</p>
+<p>而视觉测试服务则相对要简单得多，往往只需要点击服务页面上的一个按钮就全搞定了。</p>
+<h4 id="历史版本的可追溯性"><a href="#历史版本的可追溯性" class="headerlink" title="历史版本的可追溯性"></a>历史版本的可追溯性</h4><p>本地视觉测试工具通常都有一个硬伤，它们只会保存当前的Baseline，当需要更新Baseline时，会用新的Baseline覆盖掉之前的Baseline，整个环境中永远只会有最新的Baseline。然而对于Baseline来说，除了使用当前的Baseline来对比最新截图之外，有时候我们还希望能够浏览历史的Baseline，因为Baseline的历史版本，其本身就是对被测应用的迭代描述，甚至是各个里程碑的图像记录，是有其工程意义的。</p>
+<p>显然，本地视觉测试工具无法提供这样的可追溯性，而视觉测试服务通常都会保留全部的图片历史，所以能够更好的满足这一特性。</p>
+<h4 id="基准版本的回滚"><a href="#基准版本的回滚" class="headerlink" title="基准版本的回滚"></a>基准版本的回滚</h4><p>举个例子，Dev提交部署了版本v005，告诉QA这是新的实现，QA在测试“确认”后，将图像对比的Baseline更新为v005版本，稍后，BA提出v005版本的“需求”是错误的，此时，Dev需要把代码回滚到v004版本，那问题来了，如果是本地的视觉测试工具，v004版本的Baseline已经被v005版本给替换了，缺少v004版本的Baseline，QA只能人肉确保版本回滚的正确性了。</p>
+<p>所以，具备基准版本的回滚功能，可以在必要的时候，更好的实现视觉测试，而只有视觉测试服务才具备回滚基准版本的能力。</p>
+<p>当然，视觉测试服务也不是无懈可击的。相较于本地的视觉测试工具，使用视觉测试服务的高成本是显而易见的，第三方商业服务的费用是实实在在的Money，即便使用开源的视觉测试服务，在服务部署上，对团队也多多少少有一些DevOps的技能要求。如果为了更好的使用效果，将开源视觉测试服务部署到云端，也会产生相应的计算资源费用。</p>
+<h3 id="交互式的图像对比-vs-批处理式的图像对比"><a href="#交互式的图像对比-vs-批处理式的图像对比" class="headerlink" title="交互式的图像对比 vs 批处理式的图像对比"></a>交互式的图像对比 vs 批处理式的图像对比</h3><p>无论是本地的视觉测试工具，还是远端的视觉测试服务，在测试流程上，一般都可以分为交互式和批处理式两种。</p>
+<p>交互式的测试流程一般如下图所示。在该流程中，图像对比的工作的全部嵌入到功能测试的步骤当中，每一步视觉测试都会将被测图像传递给图像对比的工具或服务，然后等待工具或服务返回图像对比的结果，就类似平常使用的断言语句。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/interactive-visual-testing.png" alt="interactive-visual-testing"></p>
+<p>批处理式的测试流程一般如下图所示。该流程的特点是视觉测试的步骤和功能测试的步骤完全分离，功能测试仅仅需要将图像保存到指定的路径下，待整个功能测试都结束后，再将所有的图像、一次性全部传递给视觉测试工具或服务进行对比。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/batch-visual-testing.png" alt="batch-visual-testing"></p>
+<p>交互式视觉测试和批处理式视觉测试在流程上的不同，造成了两者在呈现测试结果上的差异。对于交互式视觉测试，每一步测试都会即时获取到对比结果，从而使视觉测试的结果直接体现在功能测试的结得当中。而批处理式视觉测试，其步骤和功能测试完全隔离，测试结果由视觉测试工具或服务单独呈现。</p>
+<p>至于视觉测试结果要不要和功能测试结果绑定在一起，并没有什么公理可依，大家尽可按照自己的实际需求进行取舍。只不过就个人而言，我更倾向于将二者分离，因为严格来讲，视觉测试给出的自动化结果，其本身仅仅是图像对比的结果，而图像对比结果并不等于测试结果。我们说过，图像对比只是UI测试的一种辅助手段，帮助我们从UI差异中去快速发现问题，图像对比仅仅揭示差异，而差异并不等于缺陷。所以，自动化视觉测试给出的结果不应该被直接用来表征UI测试的结果，否则它会大大的降低功能测试结果的可信度，失去可信度的测试是没有有价值的。</p>
+<h2 id="关于Micoo的一点啰嗦"><a href="#关于Micoo的一点啰嗦" class="headerlink" title="关于Micoo的一点啰嗦"></a>关于Micoo的一点啰嗦</h2><p>基于以上的考虑，Micoo选择了服务型的实现方式和批处理式的测试流程。Micoo的理念是聚焦最核心的图像对比工作，仅此。所以从功能上来说，Micoo仅仅是一个图像对比服务，它将操作UI应用和截取图片的工作，全权留给了功能测试去完成。这样貌似偷了个大懒，但实则拓宽了实施视觉测试的对象。理论上，任何UI应用，无论是Web应用、移动应用、桌面应用，只要它能被自动化测试并且截图，就能借由Micoo完成视觉测试。而将来，无论这些被测应用如何更新演进，只要其相应的自动化功能测试手段能同步跟进，Micoo就永远能为它们提供视觉测试的解决方案，这样就从根本上避开了当年BackstopJS在PhantomJS身上踩下的天坑（如果对这段内容感到很突兀，可以参阅之前的故事篇获取一些上下文）。</p>
+<h2 id="视觉测试在CI中的实施方式"><a href="#视觉测试在CI中的实施方式" class="headerlink" title="视觉测试在CI中的实施方式"></a>视觉测试在CI中的实施方式</h2><p>目前，基于视觉测试与功能测试的相互关系，它们在CI中的构建方式主要有四种，分别为：独立型、混合型、同步型、以及异步型的构建方式。</p>
+<h3 id="独立型的CI构建方式"><a href="#独立型的CI构建方式" class="headerlink" title="独立型的CI构建方式"></a>独立型的CI构建方式</h3><p>下图是独立型的自动化测试在CI中的构建方式，其特征是功能测试和视觉测试完全独立，互不依赖也互不影响。BackstopJS这类的工具就通常使用独立型的方式构建到CI当中。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-1.png" alt="vt-in-ci-1"></p>
+<h3 id="混合型的CI构建方式"><a href="#混合型的CI构建方式" class="headerlink" title="混合型的CI构建方式"></a>混合型的CI构建方式</h3><p>然后是混合型的构建方式，其特点是视觉测试的步骤完全跟功能测试绑定在一起，即使用一套自动化测试实现功能和视觉的双重校验。不用多想，这就是标准的交互式视觉测试方案在CI中的构建方式，比如Applitools。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-2.png" alt="vt-in-ci-2"></p>
+<h3 id="同步型的CI构建方式"><a href="#同步型的CI构建方式" class="headerlink" title="同步型的CI构建方式"></a>同步型的CI构建方式</h3><p>同步型的构建方式中，视觉测试依赖前置功能测试的产出，即先由功能测试获取到UI截图，再将截图交给视觉测试进行图像对比。其后续步骤，比如部署UAT环境，需要视觉测试通过才能进行。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-3.png" alt="vt-in-ci-3"></p>
+<h3 id="异步型的CI构建方式"><a href="#异步型的CI构建方式" class="headerlink" title="异步型的CI构建方式"></a>异步型的CI构建方式</h3><p>异步型的构建方式与同步型的构建方式有相似之处，其视觉测试都要依赖功能测试的截图，不同的是，其后续步骤，比如部署UAT环境，可以不依赖视觉测试的结果，只要功能测试通过就可以自动部署。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/vt-in-ci-4.png" alt="vt-in-ci-4"></p>
+<p>实践中，不同CI构建方式的选择没有太明显的倾向性，主要还是根据所使用的视觉测试方案来制定，比如，独立的视觉测试工具多选择独立型的构建方式，交互式的视觉测试方案肯定是混合型的构建方式，而批处理式的视觉测试方案则可以在同步型和异步型构建方式中灵活选择。</p>
+<h2 id="视觉测试的有益实践"><a href="#视觉测试的有益实践" class="headerlink" title="视觉测试的有益实践"></a>视觉测试的有益实践</h2><p>最后，作为对大家耐心阅读至此的感谢，特此奉上一些实施视觉测试时的有益实践，纯干货：</p>
+<h3 id="什么样的项目适合引入视觉测试？"><a href="#什么样的项目适合引入视觉测试？" class="headerlink" title="什么样的项目适合引入视觉测试？"></a>什么样的项目适合引入视觉测试？</h3><p>视觉测试的实质是UI的一种自动化回归测试。在考虑是否引入视觉测试之前，先要确定是否需要建立UI的自动化回归测试。视觉测试对UI回归测试的帮助，概括起来就四个字：减负增效。通过大大降低测试断言的使用来减小自动化测试的编写和维护负担，同时提高测试的效能和稳定性。由此可见，真正适合引入视觉测试的项目，一般来说都是那些UI内容复杂、同时迭代变更又比较频繁的项目。此外，那些对UI呈现效果要求较高的项目，比如客户全是像素眼的PO，那么视觉测试也是不错的辅助手段。</p>
+<h3 id="什么样的项目不适合使用视觉测试？"><a href="#什么样的项目不适合使用视觉测试？" class="headerlink" title="什么样的项目不适合使用视觉测试？"></a>什么样的项目不适合使用视觉测试？</h3><p>要明确的是，只要能被自动化测试的UI，技术上都能进行视觉测试，但视觉测试是否对任何UI项目都适用，却是不一定的：</p>
+<ul>
+<li>如果项目连UI自动化测试都不需要，那自然就更谈不上视觉测试了；</li>
+<li>过于简单的UI，有基本的自动化功能测试就足够了，没必要再加上视觉测试，毕竟视觉测试也是有”成本”的；</li>
+<li>过于复杂的UI，注意，这里的复杂不是指UI内容的复杂，而是指UI操作的复杂。比如，一个需要进行满篇填写内容来提交表单的UI，在其功能测试的步骤中，就几乎已经遍历完了所有的界面元素，再对它进行视觉测试，并不能降低多少元素定位的成本。那么对这样的UI引入视觉测试，收益是不大的；</li>
+<li>可以使用图像对比测试视频播放器，但视觉测试一个主要内嵌视频播放器的网页或移动端UI，一般来说不是一个好想法；</li>
+</ul>
+<h3 id="想玩儿服务型的视觉测试，但没有资源怎么办？"><a href="#想玩儿服务型的视觉测试，但没有资源怎么办？" class="headerlink" title="想玩儿服务型的视觉测试，但没有资源怎么办？"></a>想玩儿服务型的视觉测试，但没有资源怎么办？</h3><p>“没有就要呗，不然还能咋地？” 当然，这是半句玩笑话。这里真正想说的是，长久以来，在项目的计算资源分配上，测试一直是二等公民。当我们计算启动项目需要使用的资源费用时，比如购买哪些云服务、需要多少计算实例、需要怎样的数据库或缓存等，通常只会考虑开发的需求，而不会也不需要顾及测试的需求。历史上，这是正确的，随便找一个CI的Agent，就能把我们常用的测试框架给打发了。然而，伴随着容器技术助推传统测试工具、框架向测试服务的转型，计算资源也开始成为自动化测试策略中需要规划的要素。这一点，对早就完成测试平台化、测试服务化的大厂来说，不是问题，但对玩儿敏捷的TW团队来说，却还是一个新的思考。所以，言归正传，想在项目中使用视觉测试服务，那么就尽量在项目早期阶段，将此需求体现到测试策略当中，呈现给团队和客户，从而提前准备和规划。</p>
+<h3 id="视觉测试中如何解决UI对象动态变化的问题？"><a href="#视觉测试中如何解决UI对象动态变化的问题？" class="headerlink" title="视觉测试中如何解决UI对象动态变化的问题？"></a>视觉测试中如何解决UI对象动态变化的问题？</h3><p>来了来了，这个凡是做视觉测试就一定绕不过去的问题：</p>
+<ul>
+<li>页面中有视频，怎么办？</li>
+<li>图片slideshow会自动滚动，怎么办？</li>
+<li>显示的时间每秒钟都不一样，怎么办？</li>
+<li>那个ID每次请求都不一样，怎么办？</li>
+</ul>
+<p>这些UI中动态变化的元素，对实施图像对比是非常大的阻碍。当然，解决办法也是有的，比如：</p>
+<ul>
+<li><strong>掉包</strong>，UI显示的数据大多来自后端（或远端），有些数据是不恒定的，比如一些每次请求后端都会变化的信息，如动态ID、数字签名、特征码等等，又或者一些自己团队不可控的信息，比如一个显示价格的UI，自己团队只负责在UI中将价格显示出来，具体的数字则受后端或后台的控制而可变。对于这样的场景，我们可以使用服务虚拟化的技术来替换掉相应的后端，从而使用恒定不变的数据来保障视觉测试的可行。</li>
+</ul>
+<ul>
+<li><strong>作弊</strong>，使用虚拟服务来掉包测试数据的成本是很高的，另外，有些前端显示的内容并不是从后端获取的，而是前端自己生成的随机数据，那么对于这些无论是来自后端还是前端的动态数据，另一种”廉价”的处理方式，就是在功能测试中将它们直接修改成固定的假数据。比如，在Web的测试中，如果需要进行视觉测试的当前页面包含有动态数据，我们可以使用Javascript直接修改DOM的内容，将某个本应该是动态计算或获取的值替换成固定的内容，然后再对当前页面截图对比。</li>
+</ul>
+<ul>
+<li><strong>抹黑</strong>，至于那些频繁变化的视频或者图片，我们甚至可以来得更狠，直接修改DOM将其修改成相同大小的色块，从而保障视觉测试的可行。除了抹黑，还有抠图的操作，即直接删除视频或者图片的DOM节点，但一般不建议，因为大多数情况下，删除DOM节点可能会影响到页面的布局展示。</li>
+</ul>
+<ul>
+<li><strong>后门</strong>，有时为了实现视觉测试，但又不想修改DOM结构，就可以让Dev在测试环境中设置一些功能或者特效开关，比如，当开关关闭时，图片slideshow只显示第一张图片而不自动切换其它图片，从而使视觉测试成为可能。一旦使用的功能开关，就增加了UI的实现复杂度，测试也需要相应的关注这些功能开关不会影响到产品环境的表现。</li>
+</ul>
+<ul>
+<li><strong>罢工</strong>，如果上面这些都解决不了动态数据的问题，又或者能解决但成本太高，那么就应该考虑放弃进行视觉测试。合理适当的手动测试有时才是性价比最高的解决方案。</li>
+</ul>
+<p>尽管我们有这些解决动态元素问题的方法，但显而易见的是，它们要么成本高昂，要么对被测DOM修修改改，带来收益的同时也引入了风险。所以对页面动态元素的评估，也是在策略上是否引入视觉测试的重要参考。</p>
+<h3 id="如何解决视觉测试中截图环境不一致的问题？"><a href="#如何解决视觉测试中截图环境不一致的问题？" class="headerlink" title="如何解决视觉测试中截图环境不一致的问题？"></a>如何解决视觉测试中截图环境不一致的问题？</h3><p>初次接触视觉测试的同学，通常关注的是截谁的图、怎么截图，而只有在视觉测试中栽过跟头的人，才会更关注在哪儿去截图。比如，对Web应用来说，哪怕使用相同版本的Chrome和Puppeteer，在MacOS和Windows上截的图，可能是有差异的。更别说，在你的MacBook上截取的图像，和CI的Agent机器上截取的图像，差异可能更大。那么该如何避免这种差异呢？目前来说，最合适的方法，是在容器中进行截图。比如，将你需要的Chrome或者Chromium版本，打到特定的容器里，而后无论在本地环境还是CI环境，都将自动化测试运行在这个相同的容器内部，那么你得到的截图就一定是相同的。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/test-in-container.png" alt="test-in-container"></p>
+<p>当然，如果你使用Applitools服务，那么也不会存在截图环境不一致的问题，因为Applitools是将DOM片段上传到服务器上，在服务端使用指定的浏览器进行渲染和截图。</p>
+<h3 id="如何设定差异阈值最合适？"><a href="#如何设定差异阈值最合适？" class="headerlink" title="如何设定差异阈值最合适？"></a>如何设定差异阈值最合适？</h3><p>不使用差异阈值最合适！使用差异阈值的目的，通常都是在一定程度内容忍对比差异，比如设置3%的差异阈值，就可以使视觉测试在自动报告对比结果时，对于图片差异区域低于整张图像的3%的测试，视为对比结果一致而通过测试。差异阈值主要用在一些容易产生截图噪音、或者对比经常出现一些小范围且无意义的差异的测试中，用来提高测试的鲁棒性。从测试方案设计的角度来说，差异阈值是很不错的想法，但真正的项目实践中，却并不是那么回事。原因很简单，差异阈值提高测试鲁棒性的代价是牺牲图像对比的敏感性。基于像素对比的视觉测试，高敏感性是其最大的优势，同时也是建立其测试结果可信度的根基。使用了差异阈值的视觉测试，其对比结果就从完全可信变成了部分可信，哪怕其可信阈达到99.99%，只要不是100%的完全可信，其测试结果就会受到质疑，任何存在可质疑结果的自动化测试都是无益的。具体来说，设置1%的差异阈值，测试就会自动容忍1%的图像差异，然而，没人能确保这1%的差异永远都发生在那些期望的、无关紧要的边角料区域，如果下一次这1%的差异正好就发生在一些关键的地方，比如价格的单位符号，那么测试遗漏的结果就可能很严重。另外，差异阈值是绝对的，但差异区域却是相对的。请问，3%的差异和1%的差异谁大？答案是不确定，比如，200x400图像的3%的差异，和1920x1080图像的1%的差异，后者的差异明显比前者要大得多。所以，请一定慎用差异阈值。</p>
+<h3 id="视觉测试挂得太频繁，怎么办？"><a href="#视觉测试挂得太频繁，怎么办？" class="headerlink" title="视觉测试挂得太频繁，怎么办？"></a>视觉测试挂得太频繁，怎么办？</h3><p>恭喜你，咋要的就是这效果！图像对比作为UI回归测试的一种辅助手段，当它频繁”挂掉”的时候，说明UI正在经历快速的变更，这其实并不是什么坏事。传统的功能性自动化测试，面对UI的快速变更，测试断言会频繁失效，给自动化测试的维护工作带来极大的工作量，搞得我们心烦意乱，这时往往需要评估继续进行自动化测试的ROI。而图像对比测试在更新baseline上的优势，极大的减少甚至部分消除了这些维护工作，让我们可以泰然面对频繁的测试失败。所以，不同的测试方式带来不同的测试体验，同时也改变着我们面对测试失败的心态。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>最后想说的是，UI测试中的图像对比并不是什么技术含量很高的工作，但它却一定是效能很高的手段，把简单的事情做到精致、做到极致，也能得到非同寻常的收获。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/" rel="prev" title="图像对比在UI测试中的实践-故事篇">
+      <i class="fa fa-chevron-left"></i> 图像对比在UI测试中的实践-故事篇
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFUI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94"><span class="nav-number">1.</span> <span class="nav-text">什么是UI测试中的图像对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E4%BB%B7%E5%80%BC"><span class="nav-number">2.</span> <span class="nav-text">图像对比在UI测试中的价值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%BF%E4%BB%A3%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E6%96%AD%E8%A8%80%E8%AF%AD%E5%8F%A5%EF%BC%8C%E6%8F%90%E9%AB%98%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95%E7%9A%84%E7%BB%B4%E6%8A%A4%E6%95%88%E7%8E%87%E5%92%8C%E6%B5%8B%E8%AF%95%E6%89%A7%E8%A1%8C%E7%9A%84%E7%A8%B3%E5%AE%9A%E6%80%A7"><span class="nav-number">2.1.</span> <span class="nav-text">替代自动化测试中的断言语句，提高自动化测试的维护效率和测试执行的稳定性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%AF%B9%E5%9B%BE%E8%A1%A8%E7%AD%89%E7%BB%98%E5%9B%BE%E5%85%83%E7%B4%A0%E7%9A%84%E5%9B%9E%E5%BD%92%E6%B5%8B%E8%AF%95"><span class="nav-number">2.2.</span> <span class="nav-text">实现对图表等绘图元素的回归测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%BD%E5%A4%9F%E6%8D%95%E8%8E%B7%E6%84%8F%E6%96%99%E4%B9%8B%E5%A4%96%E7%9A%84UI%E5%BC%82%E5%B8%B8"><span class="nav-number">2.3.</span> <span class="nav-text">能够捕获意料之外的UI异常</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E5%8A%A0%E9%80%82%E5%BA%94%E6%95%8F%E6%8D%B7%E9%A1%B9%E7%9B%AE%E4%B8%ADUI%E7%9A%84%E9%A2%91%E7%B9%81%E5%8F%98%E6%9B%B4"><span class="nav-number">2.3.1.</span> <span class="nav-text">更加适应敏捷项目中UI的频繁变更</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E5%A5%BD%E7%9A%84%E6%8F%8F%E8%BF%B0UI%E7%9A%84%E5%8F%98%E5%8C%96"><span class="nav-number">2.3.2.</span> <span class="nav-text">更好的描述UI的变化</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%9E%E6%96%BD%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">图像对比在UI测试中的自动化实施模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BD%93%E5%89%8D%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8C%96%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E6%96%B9%E6%A1%88"><span class="nav-number">4.</span> <span class="nav-text">当前的自动化图像对比方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7-vs-%E8%BF%9C%E7%AB%AF%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.1.</span> <span class="nav-text">本地视觉测试工具 vs 远端视觉测试服务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Baseline%E7%9A%84%E7%AE%A1%E7%90%86%E5%92%8C%E5%85%B1%E4%BA%AB"><span class="nav-number">4.1.1.</span> <span class="nav-text">Baseline的管理和共享</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0Baseline%E7%9A%84%E9%9A%BE%E6%98%93%E7%A8%8B%E5%BA%A6"><span class="nav-number">4.1.2.</span> <span class="nav-text">更新Baseline的难易程度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%86%E5%8F%B2%E7%89%88%E6%9C%AC%E7%9A%84%E5%8F%AF%E8%BF%BD%E6%BA%AF%E6%80%A7"><span class="nav-number">4.1.3.</span> <span class="nav-text">历史版本的可追溯性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E5%87%86%E7%89%88%E6%9C%AC%E7%9A%84%E5%9B%9E%E6%BB%9A"><span class="nav-number">4.1.4.</span> <span class="nav-text">基准版本的回滚</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%A4%E4%BA%92%E5%BC%8F%E7%9A%84%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94-vs-%E6%89%B9%E5%A4%84%E7%90%86%E5%BC%8F%E7%9A%84%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94"><span class="nav-number">4.2.</span> <span class="nav-text">交互式的图像对比 vs 批处理式的图像对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8EMicoo%E7%9A%84%E4%B8%80%E7%82%B9%E5%95%B0%E5%97%A6"><span class="nav-number">5.</span> <span class="nav-text">关于Micoo的一点啰嗦</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E5%9C%A8CI%E4%B8%AD%E7%9A%84%E5%AE%9E%E6%96%BD%E6%96%B9%E5%BC%8F"><span class="nav-number">6.</span> <span class="nav-text">视觉测试在CI中的实施方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8B%AC%E7%AB%8B%E5%9E%8B%E7%9A%84CI%E6%9E%84%E5%BB%BA%E6%96%B9%E5%BC%8F"><span class="nav-number">6.1.</span> <span class="nav-text">独立型的CI构建方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E5%9E%8B%E7%9A%84CI%E6%9E%84%E5%BB%BA%E6%96%B9%E5%BC%8F"><span class="nav-number">6.2.</span> <span class="nav-text">混合型的CI构建方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E5%9E%8B%E7%9A%84CI%E6%9E%84%E5%BB%BA%E6%96%B9%E5%BC%8F"><span class="nav-number">6.3.</span> <span class="nav-text">同步型的CI构建方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E5%9E%8B%E7%9A%84CI%E6%9E%84%E5%BB%BA%E6%96%B9%E5%BC%8F"><span class="nav-number">6.4.</span> <span class="nav-text">异步型的CI构建方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E7%9A%84%E6%9C%89%E7%9B%8A%E5%AE%9E%E8%B7%B5"><span class="nav-number">7.</span> <span class="nav-text">视觉测试的有益实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E9%A1%B9%E7%9B%AE%E9%80%82%E5%90%88%E5%BC%95%E5%85%A5%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%EF%BC%9F"><span class="nav-number">7.1.</span> <span class="nav-text">什么样的项目适合引入视觉测试？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E9%A1%B9%E7%9B%AE%E4%B8%8D%E9%80%82%E5%90%88%E4%BD%BF%E7%94%A8%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%EF%BC%9F"><span class="nav-number">7.2.</span> <span class="nav-text">什么样的项目不适合使用视觉测试？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%B3%E7%8E%A9%E5%84%BF%E6%9C%8D%E5%8A%A1%E5%9E%8B%E7%9A%84%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%EF%BC%8C%E4%BD%86%E6%B2%A1%E6%9C%89%E8%B5%84%E6%BA%90%E6%80%8E%E4%B9%88%E5%8A%9E%EF%BC%9F"><span class="nav-number">7.3.</span> <span class="nav-text">想玩儿服务型的视觉测试，但没有资源怎么办？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E4%B8%AD%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3UI%E5%AF%B9%E8%B1%A1%E5%8A%A8%E6%80%81%E5%8F%98%E5%8C%96%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%9F"><span class="nav-number">7.4.</span> <span class="nav-text">视觉测试中如何解决UI对象动态变化的问题？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E4%B8%AD%E6%88%AA%E5%9B%BE%E7%8E%AF%E5%A2%83%E4%B8%8D%E4%B8%80%E8%87%B4%E7%9A%84%E9%97%AE%E9%A2%98%EF%BC%9F"><span class="nav-number">7.5.</span> <span class="nav-text">如何解决视觉测试中截图环境不一致的问题？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%AE%BE%E5%AE%9A%E5%B7%AE%E5%BC%82%E9%98%88%E5%80%BC%E6%9C%80%E5%90%88%E9%80%82%EF%BC%9F"><span class="nav-number">7.6.</span> <span class="nav-text">如何设定差异阈值最合适？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%86%E8%A7%89%E6%B5%8B%E8%AF%95%E6%8C%82%E5%BE%97%E5%A4%AA%E9%A2%91%E7%B9%81%EF%BC%8C%E6%80%8E%E4%B9%88%E5%8A%9E%EF%BC%9F"><span class="nav-number">7.7.</span> <span class="nav-text">视觉测试挂得太频繁，怎么办？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">8.</span> <span class="nav-text">最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ariman</p>
+  <div class="site-description" itemprop="description">微服务 自动化测试 契约测试</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ariman</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":120,"height":350,"hOffset":-10,"vOffset":-150},"mobile":{"show":true},"react":{"opacity":1}});</script></body>
+</html>

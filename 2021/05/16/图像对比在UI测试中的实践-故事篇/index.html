@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="这是一份在UI自动化测试中使用图像对比的实践分享，分为故事篇和技术篇两部分，故事篇会首先回顾这几年在视觉测试上的历程，技术篇则会介绍一些视觉测试上的技术总结。  六年前刚入职到ThoughtWorks成都办公室后，第一次参加QA社区的Catch Up，那时的我在新环境中还分不清谁是张三谁是李四。 会上，依稀记得有两位貌似道行深厚的人物，就某个工具的使用反馈，询问在座的众生，现场一片寂静。会后，回">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图像对比在UI测试中的实践-故事篇">
+<meta property="og:url" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/index.html">
+<meta property="og:site_name" content="Ariman&#39;s Lazy Blog">
+<meta property="og:description" content="这是一份在UI自动化测试中使用图像对比的实践分享，分为故事篇和技术篇两部分，故事篇会首先回顾这几年在视觉测试上的历程，技术篇则会介绍一些视觉测试上的技术总结。  六年前刚入职到ThoughtWorks成都办公室后，第一次参加QA社区的Catch Up，那时的我在新环境中还分不清谁是张三谁是李四。 会上，依稀记得有两位貌似道行深厚的人物，就某个工具的使用反馈，询问在座的众生，现场一片寂静。会后，回">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/reskin.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/backstopjs.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/dpxdt.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/tvt.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/speed.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/tvt-share-volume.png">
+<meta property="og:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/micoo-1.png">
+<meta property="article:published_time" content="2021-05-16T00:14:30.000Z">
+<meta property="article:modified_time" content="2021-05-16T06:36:36.946Z">
+<meta property="article:author" content="Ariman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/reskin.png">
+
+<link rel="canonical" href="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>图像对比在UI测试中的实践-故事篇 | Ariman's Lazy Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143312940-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-143312940-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ariman's Lazy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          图像对比在UI测试中的实践-故事篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2021-05-16 08:14:30 / 修改时间：14:36:36" itemprop="dateCreated datePublished" datetime="2021-05-16T08:14:30+08:00">2021-05-16</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>这是一份在UI自动化测试中使用图像对比的实践分享，分为故事篇和技术篇两部分，故事篇会首先回顾这几年在视觉测试上的历程，技术篇则会介绍一些视觉测试上的技术总结。</p>
+</blockquote>
+<p>六年前刚入职到ThoughtWorks成都办公室后，第一次参加QA社区的Catch Up，那时的我在新环境中还分不清谁是张三谁是李四。 会上，依稀记得有两位貌似道行深厚的人物，就某个工具的使用反馈，询问在座的众生，现场一片寂静。会后，回到组上，我好奇的 问了一下我们的TL（请允许这里隐去TA的名字，不然我多半会被怼的）那是什么东西、我们有没有使用，面对TL一番风卷残云的 介绍，作为刚刚从通讯行业跨入互联网行业才三天的菜鸟，小的我真的是屁都没听懂，唯一听明白并且记下来的就是“它还需要部署服务器，很难用”。</p>
+<p>那个工具的名字叫做Viff，在后来很长的一段时间内，我仍然不知道它是干嘛的，而这，就是我第一次和UI测试中的图像对比的擦肩而过。</p>
+<h2 id="一不小心，摸到了图像对比的大门"><a href="#一不小心，摸到了图像对比的大门" class="headerlink" title="一不小心，摸到了图像对比的大门"></a>一不小心，摸到了图像对比的大门</h2><p>有时候，接触某种技术、思考某种解决方案，靠的真不是大咖的演讲，而就是那么点儿缘分和灵光一现。</p>
+<p>时间来到2016年10月，某澳洲项目S。有一次，从王小礼的桌旁溜过，看她一副愁眉苦脸、生无可恋的样子，就猜到多半有”戏”。本着有“戏”大家乐的心态，随便打听了一下。 原来，她们组最近在给客户做产品换肤。了解S项目的同学应该都知道，客户是一个集团企业，旗下有八九个品牌，所以通常一个产品就会有八九套UI。 而她们组在做的，就是给其中的多个品牌同时换肤。面对每天都在变化的UI，有时甚至是往复修改的CSS，别说写自动化测试了，每张卡的人肉检查早都已经应接不暇了。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/reskin.png" alt="reskin"></p>
+<p>当时的闲聊中，我提到的建议是，不知道有没有什么工具能帮着检查这类UI快速变更的页面。下来再琢磨这个问题，经过一番折腾，最终发现原来有种手段叫做“Visual Regression Testing”。</p>
+<p>至于后来王小礼是怎么熬出她们的品牌换肤的，我就不知道咯，阿弥陀佛~</p>
+<h2 id="出师未捷身先死"><a href="#出师未捷身先死" class="headerlink" title="出师未捷身先死"></a>出师未捷身先死</h2><p>既然摸到了图像对比的大门，不进去捣腾捣腾，就说不过去了是吧！当时，开源社区中的当家花旦是BackstopJS，使用配置文件的方式来编写和管理测试案例，完全没有多大的上手难度，输出的报告对于从来没接触过视觉测试的人来说，还是让人眼前一亮。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/backstopjs.png" alt="backstopjs"></p>
+<p>当时，我们组的工作也是维护一个S项目下的某个前端应用，所以在项目上通过BackstopJS来实践视觉测试，便成了非常正儿八经的选项。然而、可是、没想到，仅仅用BackstopJS遍历了两三个页面，测试就…崩了!是的，你没看错，崩了！经过几番调查，问题很快确定了：BackstopJS基于配置文件来组织测试案例，执行测试时为了能够做到Headless，使用的驱动是PhantomJS（是的，就是那个作者半途跑路的PhantomJS），而PhantomJS原生<strong>不支持ES6</strong>。所以，解决办法就是……没有办法！什么，你说BackstopJS支持Puppeteer？Puppeteer发布v1版本是在2018年的一月，至于BackstopJS完成使用Puppeteer替换PhantomJS，那更是猴年马月的事情咯~</p>
+<h2 id="找准目标，二次开发"><a href="#找准目标，二次开发" class="headerlink" title="找准目标，二次开发"></a>找准目标，二次开发</h2><p>刚刚开门就撞上了叹息之墙，有够背的，可即便没能取得开门红，图像对比在UI测试中的巨大潜力，仍旧让我深信这是一滩值得去趟的“浑水”。</p>
+<p>换个工具继续尝试，接下来盯上的就是Dpxdt（我用办公室阿姨擦桌子的抹布打赌，你第一次绝对不知道这玩意儿怎么念）。选择Dpxdt是有一番考量的，包括：</p>
+<ul>
+<li>作者是Google的工程师，貌似很靠谱；</li>
+<li>源码是Python，逼不得已了还能自己抢救抢救；</li>
+<li>支持以服务化的方式来进行测试；</li>
+</ul>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/dpxdt.png" alt="dpxdt"></p>
+<p>其中，服务化的测试方式是选择Dpxdt的重中之重！之前虽然在BackstopJS身上出师不利，但却发现了对视觉测试来说非常重要的关键点：<strong>视觉测试的最大价值在于图像对比，其它诸如浏览器驱动、页面操作、截图等工作，都不是也不应该是视觉测试的核心内容，它们应该由其它更擅长、更专注于此类活动的技术组件来负责</strong>，即术业有专攻，从自动化实施的层面考虑，尽量做到技术组件的功能内聚，这样，无论将来前端技术如何演进，也只需要更新相应的驱动组件即可，而图像对比作为视觉测试的核心，则不会受到影响。</p>
+<p>想法很丰满，现实却很骨感。原生的Dpxdt，在实现上与BackstopJS有相似之处，比如，同样使用配置文件来管理测试案例，同样使用PhantomJS来驱动浏览器，但在架构上，Dpxdt实现了测试端和服务端的分离。在测试端，使用PhantomJS驱动浏览器进行页面操作和截图，然后将截取的图片上传到服务端，服务端使用ImageMagic进行图像对比，最后以一个Web应用的方式来管理和展示图像对比的结果。</p>
+<p>很明显，直接使用Dpxdt是不可行的，因为绕不过PhantomJS的死结，但Dpxdt两端分离的架构设计，给移花接木带来了可能。为了在项目上进行视觉测试，只能对Dpxdt进行二次开发，包括：</p>
+<ul>
+<li>封装Dpxdt暴露的API接口，重新构建可独立使用的客户端库；</li>
+<li>解决一些Dpxdt在Windows环境下的兼容性问题，因为UI测试运行在Windows的EC2上；</li>
+<li>加入了Ghost功能；</li>
+<li>重建了部分服务的UI界面，原版的实在有些丑；</li>
+<li>Dpxdt在使用ImageMagic对比不同尺寸的图片时容易出错，使用compose进行了相应的预处理操作；</li>
+</ul>
+<p>经过以上的修改，2017年5月，定制版的Dpxdt基本具备了相对稳定的图像对比功能。其带来的收益也是杠杠的，<strong>像素对比带来极高的测试敏感度，不会漏掉UI的任何异常，同时，去掉了UI测试中的几乎所有断言语句，大大的提高了测试的稳定性，这在那个Selenium的年代，是非常有价值的</strong>。</p>
+<p>费劲心思修改出来的Dpxdt，肯定不会仅仅服务于一个项目。通过将Dpxdt部署到独立的EC2上（不得不说当年的客户真的是金主爸爸，EC2基本就是随意开)，这个视觉测试服务在TW和该客户合作的最后两年里，先后服务过6个项目产品，完成了超过5000次的图像对比，给合作的客户团队也留下了非常深的印象。</p>
+<h2 id="自力更生"><a href="#自力更生" class="headerlink" title="自力更生"></a>自力更生</h2><p>“如果让我再选择一次，我绝不会再用Dpxdt”，这是后来TW结束S项目后，正荷在一次QA社区的Catch Up上分享我们的视觉测试实践时，留下的让我记忆最深的话。原因很简单，除了我们当时整套自动化测试架构过于复杂之外，最让人难以忍受的就是Dpxdt的慢！贼慢！比贼还慢！其主要原因有二，一是Dpxdt将图片保存进了sqlite数据库文件，使得历史数据多了之后，数据库读写会非常慢。二是ImageMagic进行图片对比的速度实在是太慢了。久而久之，使用Dpxdt服务浏览图片和进行差异判定，就成了一件非常痛苦的事情。</p>
+<p>在Dpxdt服务上近两年的视觉测试实践，让我更加确幸了一件事情：<strong>服务型的视觉测试方案，才是UI测试中图像对比的王道</strong>，原因我会在之后的技术篇中细聊。</p>
+<p>时间来到2020年初，得知春节后将会入场的一个新加坡项目对Web UI有很高的要求（高到啥程度？后来的一次Sign Off，PO说：“你把F12打开，让我看看”，然后，“看吧，这个margin和设计差了2个px吧” ……想知道当时QA和BA的心情吗？），视觉测试自然就被我提上了日程。然而，Dpxdt毕竟已经是六七年前的作品，方案实现落后太多，继续改造已无益处。放眼此时的开源市场，提供图像对比的UI测试工具已经比比皆是了，光Cypress的插件就有一大堆。可是，服务型的解决方案却只有商业软件，比如大名鼎鼎的Applitools，可开源解决方案，一个都没有，这，就有些玩儿不动了。</p>
+<p>人不折腾，天诛地灭，没有现成的，就自己撸一个呗！天意弄人，赶上新冠疫情，10天的闭门春节假期，还真就让我码了一个出来，取了个很俗气的名字叫Team Visual Test，简称TVT（是不是很囧）。TVT在考虑之初，就奔着跨团队和开源共享去做的，所以使用的都是非工作时间进行的开发和维护。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/tvt.png" alt="tvt"></p>
+<p>为了最大程度的提高视觉测试的速度，TVT在具体的图像对比技术上，选择了native-image-diff，虽然这是一个名不见经传的NodeJS图像对比工具，但它的实测速度是非常理想的，通过比较，native-image-diff的图像对比速度要比ImageMagick和OpenCV快得多。比如，下图是之前做的native-image-diff和ImageMagick在对比不通尺寸图片时的速度表现，native-image-diff的对比速度几乎是ImageMagick的三倍。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/speed.png" alt="tvt"></p>
+<p>除了对图像对比技术的甄选，TVT还在项目上因地制宜的实现了一个图片文件共享的方案。我们使用容器化的方式来执行功能测试，然后将功能测试的容器和TVT服务的容器运行在相同的ECS Fargate实例的Task上，这样功能测试和TVT服务就能通过Bing Mounts的方式共享文件存储，从而实现了功能测试获取的截图，可以被TVT服务直接使用，从而避免了文件上传带来的耗时，使得整个视觉测试方案的速度可以更快。这样的实施方案，既有它的特性，比如项目上本来就使用Fargate实例，也有它的共性，比如即便不使用Fargate，随便一个Docker Swarm的环境，都能使用共享存储的方式实现类似的效果。</p>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/tvt-share-volume.png" alt="tvt"></p>
+<p>另外，不同于Dpxdt的单体服务，TVT在架构上是一个简单的微服务系统，将负责图片对比的图像对比服务和负责测试结果呈现的主服务分离开来。这样，如果将来有更强大的图片对比技术，只需要单独更新图像对比服务，就可以对TVT进行升级。 后来，在那个新加坡项目上，配上与Telegram的消息集成，TVT取得了非常好的效果。</p>
+<p>然而，TVT毕竟只是一个春节假期赶工出来的成果，在服务部署、易用性、安全性、以及多客户端支持上都有不少欠缺。下项目后，又陆陆续续的花了一些时间来对TVT进行修修补补，于是打磨出了如今的开源视觉测试服务Micoo。关于Micoo，这里就不多言了，在稍后的技术篇中也许会提到部分内容，更多的细节，感兴趣的同学可以查看:</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/Mikuu/Micoo">Github主页</a></li>
+<li><a target="_blank" rel="noopener" href="https://arxman.com/micoo/">文档</a></li>
+</ul>
+<p><img src="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%95%85%E4%BA%8B%E7%AF%87/micoo-1.png" alt="micoo-1"></p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>目前，在SEA，在没有任何推广的情况下，已经和正在使用Micoo（包括其前身TVT）的客户项目已有4个。所以，故事讲到这里，故事也还在发生。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/07/02/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%8E%AF%E5%A2%83%E4%B8%8B%E7%9A%84%E6%B5%8B%E8%AF%95%E7%AD%96%E7%95%A5%E4%B8%8E%E8%90%BD%E5%9C%B0%E5%AE%9E%E8%B7%B5/" rel="prev" title="微服务环境下的测试策略与落地实践">
+      <i class="fa fa-chevron-left"></i> 微服务环境下的测试策略与落地实践
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/" rel="next" title="图像对比在UI测试中的实践-技术篇">
+      图像对比在UI测试中的实践-技术篇 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%8D%E5%B0%8F%E5%BF%83%EF%BC%8C%E6%91%B8%E5%88%B0%E4%BA%86%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E7%9A%84%E5%A4%A7%E9%97%A8"><span class="nav-number">1.</span> <span class="nav-text">一不小心，摸到了图像对比的大门</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BA%E5%B8%88%E6%9C%AA%E6%8D%B7%E8%BA%AB%E5%85%88%E6%AD%BB"><span class="nav-number">2.</span> <span class="nav-text">出师未捷身先死</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%87%86%E7%9B%AE%E6%A0%87%EF%BC%8C%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91"><span class="nav-number">3.</span> <span class="nav-text">找准目标，二次开发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%8A%9B%E6%9B%B4%E7%94%9F"><span class="nav-number">4.</span> <span class="nav-text">自力更生</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">5.</span> <span class="nav-text">写在最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ariman</p>
+  <div class="site-description" itemprop="description">微服务 自动化测试 契约测试</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ariman</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":120,"height":350,"hOffset":-10,"vOffset":-150},"mobile":{"show":true},"react":{"opacity":1}});</script></body>
+</html>
