@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="距离我上一次写契约测试的文章已经过去了三年，在这期间，契约测试在测试策略层面已经确确实实地被很多团队落地实践，无论是对工具的熟练层度、还是对引入契约测试的主观意愿，越来越多的团队在契约测试上都展现出了更高的使用水准，甚喜。 最近，我接触到了两个不同项目的一些事情，它们都对契约测试有所涉及，但又都包含了一些很容易让人迷失的细节，所以想和大家一起分享。 生产者端的契约测试不是“写”出来的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="契约测试二三事">
+<meta property="og:url" content="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/index.html">
+<meta property="og:site_name" content="Ariman&#39;s Lazy Blog">
+<meta property="og:description" content="距离我上一次写契约测试的文章已经过去了三年，在这期间，契约测试在测试策略层面已经确确实实地被很多团队落地实践，无论是对工具的熟练层度、还是对引入契约测试的主观意愿，越来越多的团队在契约测试上都展现出了更高的使用水准，甚喜。 最近，我接触到了两个不同项目的一些事情，它们都对契约测试有所涉及，但又都包含了一些很容易让人迷失的细节，所以想和大家一起分享。 生产者端的契约测试不是“写”出来的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_a.png">
+<meta property="og:image" content="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_b.png">
+<meta property="og:image" content="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_c.png">
+<meta property="article:published_time" content="2022-10-26T08:41:44.000Z">
+<meta property="article:modified_time" content="2022-11-26T09:10:42.402Z">
+<meta property="article:author" content="Ariman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_a.png">
+
+<link rel="canonical" href="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>契约测试二三事 | Ariman's Lazy Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143312940-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-143312940-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ariman's Lazy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          契约测试二三事
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-26 16:41:44" itemprop="dateCreated datePublished" datetime="2022-10-26T16:41:44+08:00">2022-10-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-26 17:10:42" itemprop="dateModified" datetime="2022-11-26T17:10:42+08:00">2022-11-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>距离我上一次写契约测试的文章已经过去了三年，在这期间，契约测试在测试策略层面已经确确实实地被很多团队落地实践，无论是对工具的熟练层度、还是对引入契约测试的主观意愿，越来越多的团队在契约测试上都展现出了更高的使用水准，甚喜。</p>
+<p>最近，我接触到了两个不同项目的一些事情，它们都对契约测试有所涉及，但又都包含了一些很容易让人迷失的细节，所以想和大家一起分享。</p>
+<h1 id="生产者端的契约测试不是“写”出来的"><a href="#生产者端的契约测试不是“写”出来的" class="headerlink" title="生产者端的契约测试不是“写”出来的"></a>生产者端的契约测试不是“写”出来的</h1><p>在一次帮助项目上的开发同学评审契约测试代码的时候，我留意到开发同学多次描述“……在生产者端的实现是这么写的……” ，我顿时感到有些“好奇”，因为正常情况下，Pact在生产者端的契约测试不是写出来的，而是执行出来的（否则“消费者驱动的契约测试”的最终结果就只能是累死生产者团队）。于是我们进一步地对生产者端的契约测试代码进行了走读。</p>
+<p>结果发现，开发同学通过注解的方式、使用Pact的state功能对契约文件中定义的每一个交互分别进行了对应响应的实现。这样就会出现“契约文件定义多少交互，生产者端就要写多少测试”的情况，显然，这不是一种最佳的契约测试实践方式。</p>
+<p>我们先来回顾一下契约测试在生产者端的一般实践方式，如下图所示，Pact从Pact Broker拉取契约文件（或者直接读取本地的契约文件），然后从契约文件中提取交互中的请求发送给生产者服务，生产者服务根据请求返回对应的响应，Pact再将生产者返回的真实响应与契约文件中定义的期望响应进行对比，得出测试结果。在这一过程中，生产者端的契约测试有两个重要特征：<br>生产者端只需要执行测试，而不需要写测试，测试案例都由Pact通过契约文件来触发执行；<br>测试执行过程中，要求生产者服务一定要是尽量真实的服务；<br>这里的“真实”又体现在两个点上，其一，服务一定要是真正部署且运行的服务；其二，服务的代码一定（或尽量）要贴近真实产品的源码，避免包含或使用支持测试的辅助代码，即测试尽量保证非侵入性。</p>
+<p><img src="/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_a.png" alt="contract-test-23a"></p>
+<p>而Pact提供的state方式，恰恰是一种侵入式的测试方式。通常来讲，当消费者端期望测试一些异常情况下的交互时，可以和生产者端协商使用state来支持测试，比如测试生产者服务出现Internal Server Error的情况，这些情况在正常的测试环境中很难稳定触发，不能支持测试的持续执行，所以才会使用state的方式来“模拟”。所以，作为一种侵入式的模拟测试手段，state方式在契约测试中一定要慎用。</p>
+<p>那么，回过头来想一下，为什么开发同学会在生产者端的契约测试中地毯式地使用state呢？我想可能还是对契约测试的理解有些流于表面造成的。通常情况下，当我们说到“写测试”的时候，头脑中的步骤大概是这样的：</p>
+<ol>
+<li>分析和思考测试点；</li>
+<li>把测试案例写下来；</li>
+<li>执行测试；</li>
+</ol>
+<p>而在使用Pact进行消费者驱动的契约测试时，特别是在生产者端，“分析和思考测试点”的工作显然是不需要的，因为已经有契约文件这个现成的测试集合了，那么要做的就是“写测试案例”和“执行测试”。怎么写？对于生产者端的契约测试，Pact官网并没有给出多少写的步骤（因为确实在生产者端，通常情况下就不需要写测试），唯独要写的就是state的方式。由此，可能会误导一些开发同学以为生产者端的契约测试就是根据契约文件的定义使用state来遍地开花，实则不然。</p>
+<h1 id="生产者端的契约测试要使用Mock吗？"><a href="#生产者端的契约测试要使用Mock吗？" class="headerlink" title="生产者端的契约测试要使用Mock吗？"></a>生产者端的契约测试要使用Mock吗？</h1><p>还是在上述对生产者端的契约测试进行评审的过程中，我们发现生产者端的state之所以“很香”，一个非常重要的原因就是方便构造数据。我们上面提到，state的主要使用场景是模拟生产者服务出现异常情况的响应，异常情况都可以模拟，那正常情况的响应岂不更是顺手拈来。以SpringBoot的Controller、Service、Repository三层划分来说，既然能在Service层（甚至Controller层）使用Mock返回任意数据的响应，那何必还去调用依赖服务或者查询数据库然后组装真实数据返回呢？毕竟对测试来说，测试数据的准备和保障永远都是令人头痛的事情，这对契约测试来说也不例外。所以，在“真香定律”面前，state + Mock就成了生产者端执行契约测试的最佳组合……貌似。</p>
+<p>这样的认知有一个看似无懈可击的“理论支撑”，那就是：“契约测试验证的只是生产者服务返回的数据结构（少量情况下可能也会校验数值），通俗来讲就是schema，既然只验证schema，那生产者服务内部的数据是Mock的还是E2E的，其实并不重要”。如此考量，可能也是对契约测试的认知流于片面所致。作为契约测试众多价值中的一种：验证生产者服务的履约能力，期望的一定是最真实的生产者服务，能够E2E就尽量E2E，能不使用Mock就尽量不使用Mock，只有这样，我们验证的履约能力才是最接近真实的履约能力。实施自动化测试的目的，不是让测试能永远顺利通过，而是让测试能永远体现出其应有的价值。</p>
+<p>当然，理想很丰满，但现实却很骨感。在实践过程中，我们确实难免会遇到依赖服务不稳定、测试数据难以构造等问题。这种时候，我们首先应该考虑的是使用虚拟服务（比如wiremock）和测试数据库（比如testcontainers），而不是通过state在生产者服务内部添加Mock代码，因为前者在解决数据依赖的同时保证了生产者服务自身的完整性和真实性，而后者则是外科手术式的侵入式实现。而当虚拟服务和测试数据库都无法满足我们的需求时，比如就是需要构造Internal Server Error的情况，那么就大可使用state + Mock的组合了。</p>
+<h1 id="换个角度看契约测试"><a href="#换个角度看契约测试" class="headerlink" title="换个角度看契约测试"></a>换个角度看契约测试</h1><p>通常情况下：</p>
+<ul>
+<li>我们都是在服务之间讨论契约测试，典型的场景就是在微服务之间构建契约测试；</li>
+<li>契约测试要想发挥最大的价值，一定是在多（消费者）对一（生产者）的架构中；</li>
+</ul>
+<p>然而，这两点也有例外。前段时间帮助另一个项目解析测试痛点时，就遇到了一个非常鲜明的案例。如下图所示，一个APP前端消费后端的API服务，甚至可以把后端的API服务理解为APP专属的BFF。对于这样的架构（其实这里都谈不上“架构”，仅仅算个调用关系罢了），通常我们是完全不用考虑做契约测试的，因为如此架构下的契约测试并不能带来多余UI E2E测试与API功能测试的任何价值。</p>
+<p><img src="/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_b.png" alt="contract-test-23b"></p>
+<p>然而，这个项目的痛点在于，在生产环境上要求可以同时共存不同版本的APP，BFF需要对历史版本的APP进行前向兼容。不同版本的APP在消费BFF时使用的接口定义可能不同，这就要求团队在每次更新BFF版本时，都要对所有历史版本的APP做回归测试，以避免出现接口不兼容的情况。显而易见，这个测试工作量是很大的，即使通过UI的E2E自动化测试来全回归，测试执行和维护的工作量也是远远超出了我们通常基于测试金字塔所期望的可控范畴。可如果我们换个视角来看待这个问题，如下图所示，将APP的不同版本视为各自不同的消费者服务，BFF还是那个唯一的生产者服务，那整个架构不就是我们前面提到的最经典的契约测试场景了吗？</p>
+<p><img src="/2022/10/26/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%BA%8C%E4%B8%89%E4%BA%8B/contract_test_23_c.png" alt="contract-test-23c"></p>
+<p>所以，只要我们能够建立既往各版本APP与其当时版本BFF之间的完整契约测试，我们就能为BFF的后续迭代变更提供强有力的质量保障，从而避免了每次更新BFF都要回归测试各个历史版本APP的艰难挑战。</p>
+<p>说到这里，细心的同学可能会想，“UI的E2E自动化测试解决不了这个问题的根本原因是工作量太大，契约测试能够解决这个问题无非是因为测试维护和执行的工作量小而已，那么类似的，不用契约测试，而用API功能测试的方法，为各个版本的APP所消费的后端BFF版本建立各自的自动化API功能测试，是不是也能解决这个问题呢？” 答案是肯定的，建立多套自动化API功能测试确实可以解决相同的问题。那它和契约测试的区别又在哪里呢？答案就是没有区别。在这个场景下，当我们使用Pact进行契约测试时，其实质也是使用不同的契约文件触发了不同的版本的API测试。而当我们抛开Pact这个工具，使用类似RestAssured这样的工具来实现类似的“多套”API自动化测试时，我们达到的效果和使用Pact是几乎完全相同的。其实，当我们真的构建这种多套API功能测试时，我们所做的工作就是使用RestAssured对契约测试进行了实现。所以说，契约测试更重要的是一种思想，当我们剖析完问题的实质、确定可以使用契约测试来解决问题后，选择怎样的工具是可以非常灵活的。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/" rel="prev" title="图像对比在UI测试中的实践-技术篇">
+      <i class="fa fa-chevron-left"></i> 图像对比在UI测试中的实践-技术篇
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8A%E7%AF%87/" rel="next" title="QA视角下的API安全测试-上篇">
+      QA视角下的API安全测试-上篇 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E7%AB%AF%E7%9A%84%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B8%8D%E6%98%AF%E2%80%9C%E5%86%99%E2%80%9D%E5%87%BA%E6%9D%A5%E7%9A%84"><span class="nav-number">1.</span> <span class="nav-text">生产者端的契约测试不是“写”出来的</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E7%AB%AF%E7%9A%84%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E8%A6%81%E4%BD%BF%E7%94%A8Mock%E5%90%97%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">生产者端的契约测试要使用Mock吗？</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8D%A2%E4%B8%AA%E8%A7%92%E5%BA%A6%E7%9C%8B%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">换个角度看契约测试</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ariman</p>
+  <div class="site-description" itemprop="description">微服务 自动化测试 契约测试</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ariman</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":120,"height":350,"hOffset":-10,"vOffset":-150},"mobile":{"show":true},"react":{"opacity":1}});</script></body>
+</html>
