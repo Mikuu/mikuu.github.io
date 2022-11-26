@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="上篇中的OWASP API Security Top 10已经帮我们梳理了最常见的API安全问题，QA针对自己API服务的具体情况，开展有的放矢的测试和安全保障工作，能够在很大程度上扫除一大批基本的安全漏洞和隐患。这其中，作为API安全最关键的层面，API的认证与授权是整个测试工作中的重中之重。如果我们自己的团队负责构建了后端的认证授权服务，那么QA对认证授权的安全测试则需要更详细、更深入的关注。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="QA视角下的API安全测试-下篇">
+<meta property="og:url" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/index.html">
+<meta property="og:site_name" content="Ariman&#39;s Lazy Blog">
+<meta property="og:description" content="上篇中的OWASP API Security Top 10已经帮我们梳理了最常见的API安全问题，QA针对自己API服务的具体情况，开展有的放矢的测试和安全保障工作，能够在很大程度上扫除一大批基本的安全漏洞和隐患。这其中，作为API安全最关键的层面，API的认证与授权是整个测试工作中的重中之重。如果我们自己的团队负责构建了后端的认证授权服务，那么QA对认证授权的安全测试则需要更详细、更深入的关注。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OIDC_core_flow.png">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OIDC_all_flow_2.png">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OAuth_core_flow.png">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OAuth_all_flow.png">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OAuth_pkce.png">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/JWT_JWS.png">
+<meta property="og:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/JWT_JWS_JWE.png">
+<meta property="article:published_time" content="2022-11-23T04:02:51.000Z">
+<meta property="article:modified_time" content="2022-11-26T07:22:39.460Z">
+<meta property="article:author" content="Ariman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OIDC_core_flow.png">
+
+<link rel="canonical" href="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>QA视角下的API安全测试-下篇 | Ariman's Lazy Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143312940-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-143312940-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ariman's Lazy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          QA视角下的API安全测试-下篇
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-11-23 12:02:51" itemprop="dateCreated datePublished" datetime="2022-11-23T12:02:51+08:00">2022-11-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-26 15:22:39" itemprop="dateModified" datetime="2022-11-26T15:22:39+08:00">2022-11-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>上篇中的OWASP API Security Top 10已经帮我们梳理了最常见的API安全问题，QA针对自己API服务的具体情况，开展有的放矢的测试和安全保障工作，能够在很大程度上扫除一大批基本的安全漏洞和隐患。这其中，作为API安全最关键的层面，API的认证与授权是整个测试工作中的重中之重。如果我们自己的团队负责构建了后端的认证授权服务，那么QA对认证授权的安全测试则需要更详细、更深入的关注。 值得一提的是，我们经常将”认证授权”放在一起描述，但认证、授权其实是两个不同的事件，我们接下来会对它们的常见方式和QA可以涉及的关注点进行介绍。</p>
+<h1 id="服务认证的相关基础"><a href="#服务认证的相关基础" class="headerlink" title="服务认证的相关基础"></a>服务认证的相关基础</h1><p>认证，Authentication，更准确一点的称谓应该是身份认证，主要功能是对服务的使用者进行身份的合法性校验，常见的身份认证方式主要有静态码、动态口令、短信码、数字证书、以及生物特征等。说到身份认证，我们经常将它解决的问题描述成”确定’你是谁’”，然而，更确切地来说，’你是谁’仅仅是确认身份的一个要素，除此之外，还有’你知道什么’、’你拥有什么’：</p>
+<ul>
+<li><code>你知道什么</code>，通过验证’你知道什么’来确认身份是最古老的身份认证方式，我们常用的密码、暗号、生日、初恋对象等等就属于这一类；</li>
+<li><code>你拥有什么</code>，不管你是谁，只要你拥有相应的物件，就能通过认证，常用的短信码、U盾（其实质是里面的数字证书）、ID卡、甚至是婚宴的请帖都属于这一类；</li>
+<li><code>你是谁</code>，这里的’你是谁’聚焦的就是生物特征，比如指纹、声纹、虹膜等可以作为个体唯一认证的特征事务；</li>
+</ul>
+<p>在身份认证的时候，如果只对上述三种要素中的一种进行校验，那么认证失效的可能性是比较高的。比如，仅仅要求验证密码，而密码又被他人获取，那就可能发生身份盗用。所以，当代的认证服务经常会在一些关键节点对两种或者三种要素进行同时校验，这就是我们说的<code>多要素认证</code>（Multiple Factor Authentication）。比如，银行APP在登录时只需要登录密码或指纹进行单要素认证，而在转账时就需要交易密码+短信验证码或U盾密码的双要素认证（即2FA认证）。</p>
+<h2 id="常用的身份认证技术"><a href="#常用的身份认证技术" class="headerlink" title="常用的身份认证技术"></a>常用的身份认证技术</h2><p>目前，在API服务的使用场景下，身份认证也有多种不同的技术，主要包括：</p>
+<ul>
+<li>基于HTTP Basic的基本认证</li>
+<li>基于API KEY签名的认证</li>
+<li>基于SOAP Header的认证</li>
+<li>基于Token系列的认证</li>
+<li>基于数字证书的认证</li>
+<li>SAML认证</li>
+</ul>
+<p>其中，基于Token系列的认证是我们平常接触最多的认证方式，所以我们在这里着重讨论。</p>
+<blockquote>
+<p>对于其他认证方式的测试保障，特别是基于API KEY签名和数字证书的认证，感兴趣的同学可以再进一步研究哈。</p>
+</blockquote>
+<p>之所以叫”基于Token系列的认证”，是因为该认证体系是多项与Token相关的技术、协议的综合使用，包括OAuth、OpenID Connect、JWT等，其中最常见的就是OpenID Connect（简称为OIDC）协议中的身份认证技术。</p>
+<blockquote>
+<p>需要说明的是，OIDC的认证技术解决的是第三方认证的问题，比如用户使用Google或者Apple的账号登录Bitbucket网站，而单方认证并不需要使用到OIDC，比如用户直接使用自己的Bitbucket账号登录Bitbucket网站。我们这里之所以关注OIDC，主要还是由于OIDC作为第三方认证的解决方案，在API的交互上比单方认真的流程要复杂许多，从而出现安全隐患的几率更高。但就业务场景来说，现实中单方认证的使用频率肯定是高于第三方认证的，QA需要对它们的区别建立正确的理解（说人话就是：如果你的系统只需要单方认证服务，就不要去纠结为啥没用OIDC了）。</p>
+</blockquote>
+<p>OIDC是在OAuth2.0协议的基础上加构认证层（主要是添加了ID Token和UserInfo Endpoint组件）而制定的协议，大家可以参见OIDC的<a target="_blank" rel="noopener" href="https://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowSteps">官网</a>来获取协议的全部细节内容。</p>
+<p>下图是OIDC抽象流程图，其中，第(2)步既需要终端用户完成其在服务端的登录认证，又需要终端用户授权服务端向客户端提供其的个人信息，所以，这其实是认证+授权相结合的流程。而技术上也确实如此，OIDC是基于OAuth2扩展的，而OAuth2本身最早就是授权协议，而图中的服务端，更准确的说就是授权服务，所以OIDC其实质就是基于授权服务来完成的认证流程。</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OIDC_core_flow.png" alt="OIDC核心流程"></p>
+<p>上图第(2)~(3)步的认证过程，在OIDC的协议里面根据OAuth2的授权许可方式的不同，又被分为三种认证模式：</p>
+<ul>
+<li><code>授权码模式</code>，使用OAuth2的授权码流程来获取ID Token和Access Token；</li>
+<li><code>简化授权码模式</code>，使用OAuth2的简化授权码流程来获取ID Token和Access Token；</li>
+<li><code>混合模式</code>，前两种方式的混合使用；</li>
+</ul>
+<p>这三种认证模式通过第(1)步中请求参数response_type的取值来确定，所以又有以下具体划分：</p>
+<table>
+<thead>
+<tr>
+<th>response_type 取值</th>
+<th>认证模式</th>
+<th>原生定义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>code</td>
+<td>授权码模式</td>
+<td>OIDC定义</td>
+</tr>
+<tr>
+<td>id_token</td>
+<td>简化授权码模式</td>
+<td>OIDC定义</td>
+</tr>
+<tr>
+<td>id_token token</td>
+<td>简化授权码模式</td>
+<td>OIDC定义</td>
+</tr>
+<tr>
+<td>code id_token</td>
+<td>混合模式</td>
+<td>OIDC定义</td>
+</tr>
+<tr>
+<td>code token</td>
+<td>混合模式</td>
+<td>OIDC定义</td>
+</tr>
+<tr>
+<td>code id_token token</td>
+<td>混合模式</td>
+<td>OIDC定义</td>
+</tr>
+<tr>
+<td>token</td>
+<td>N/A</td>
+<td>OAuth2定义</td>
+</tr>
+<tr>
+<td>nonce</td>
+<td>N/A</td>
+<td>OAuth2定义</td>
+</tr>
+</tbody></table>
+<p>上述表格中的各认证流程如下图所示（图中为简化起见，未标注获得Access Token后请求个人信息的步骤）：</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OIDC_all_flow_2.png" alt="OIDC全流程"></p>
+<p>其中，认证码模式是进行用户身份认证最常用的模式，其第一步的认证请会用到的参数如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>使用方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>scope</td>
+<td>必选参数</td>
+</tr>
+<tr>
+<td>response_type</td>
+<td>必选参数</td>
+</tr>
+<tr>
+<td>client_id</td>
+<td>必选参数</td>
+</tr>
+<tr>
+<td>redirect_uri</td>
+<td>必选参数</td>
+</tr>
+<tr>
+<td>state</td>
+<td>建议参数</td>
+</tr>
+<tr>
+<td>response_mode</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>nonce</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>display</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>prompt</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>max_age</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>ui_locales</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>id_token_hin</td>
+<td>可选参数</td>
+</tr>
+<tr>
+<td>acr_values</td>
+<td>可选参数</td>
+</tr>
+</tbody></table>
+<p>每项参数的具体含义，感兴趣的同学可以自行查阅<a target="_blank" rel="noopener" href="https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest">官方文档</a>。对于QA来说，这里需要着重关注的是<code>redirect_uri</code>和<code>nonce</code>:</p>
+<ul>
+<li>redirect_uri定义了授权服务端在完成终端用户的登录认证后需要将用户引导去的地址，比如，当我们需要使用Github的账号登录StackOverflow的时候，我们在StackOverflow的登录页面向Github的授权服务端发送登录认证请求，其携带的redirect_uri地址就是StackOverflow地址。服务端在接收到redirect_uri参数后，会和自己保存的redirect_uri参数进行对比，结果匹配才会进行后续跳转。由于服务端接收到的redirect_uri参数来自客户端，所以就存在被篡改的风险。如果服务端在进行参数对比和之后的跳转实现时存在缺陷，一旦遭遇被篡改的redirect_uri参数，就可能造成安全漏洞。比如，当两端的redirect_uri参数不匹配时，直接跳转到客户端发送的地址，就可能遭受钓鱼攻击；</li>
+<li>nonce是一个随机数，设计的主要目的是进行会话保持，减缓重放攻击，所以尽管nonce在规范中是可选参数，但在实现时也尽量使用；</li>
+</ul>
+<h2 id="QA可以采取的安全保障工作"><a href="#QA可以采取的安全保障工作" class="headerlink" title="QA可以采取的安全保障工作"></a>QA可以采取的安全保障工作</h2><ul>
+<li>QA一定要对MFA建立正确的理解和业务敏感度，如果发现产品或系统在关键认证节点（比如转账、修改密码登操作）仅仅使用了简单的单要素认证，一定要督促团队或者建议客户改用多要素认证；</li>
+<li>对基于OAuth2或者OIDC的认证服务，一定要对redirect_uri参数的使用进行相关测试和验证，确保该地址在服务端配置正确，且在进行匹配校验时使用的是严格的一致对比，禁用部分匹配或正则表达式，禁止使用白名单；</li>
+<li>建议团队使用state和nonce参数；</li>
+<li>测试验证过期的验证码和Access Token；</li>
+<li>对于OIDC更多的安全保障切点可以参见<a target="_blank" rel="noopener" href="https://openid.net/specs/openid-connect-core-1_0.html#Security">官方文档的Security Consideration</a>;</li>
+</ul>
+<p>基于我个人的知识范畴、体力、以及通常情况下QA所能触及的能力边界，我们对认证方面的安全保障就粗略介绍到这里，但请相信，我们上面聊到的部分仅仅是与认证相关的安全细节中的冰山一角，更多复杂和高难度的、针对认证系统的攻击方式都不是短期内能够了解和掌握的，术业有专攻，更深层次的防御和保障工作还是需要安全专家的协助。</p>
+<h1 id="服务授权的相关基础"><a href="#服务授权的相关基础" class="headerlink" title="服务授权的相关基础"></a>服务授权的相关基础</h1><p>说完认证，就该说说授权了。授权，Authorization，是指为了满足用户实现某种功能而授予其相应的权利，也就是常说的解决用户”能干什么”的问题。在软件领域，授权管理主要分为两个大类：</p>
+<ul>
+<li><code>功能级权限管理</code>，即管理不同的用户能够进行哪些不同的操作。比如在各种后台系统的页面上，普通用户只能使用浏览和查询功能，管理员才能使用编辑功能，而只有超级管理员才能使用用户管理功能等。而对应到API服务里，普通用户只能使用GET请求获取数据，管理员用户才能使用POST请求创建数据；</li>
+<li><code>数据级权限管理</code>，即管理不同的用户在进行相同的操作时能获取哪些不同的数据。比如一家跨国电商贸易公司的业务查询接口，中国区管理员访问时获取的数据量，通常都应该小于等于亚太区管理员访问时获取的数据量；</li>
+</ul>
+<h2 id="访问控制"><a href="#访问控制" class="headerlink" title="访问控制"></a>访问控制</h2><p>授权仅仅是对权限进行了划分，而真正要落实权限划分，就还牵涉到一个概念叫做<code>访问控制</code>。我们可以把授权管理理解为制定规则，而访问控制则是实现规则。比如常用的门禁系统，我们可以设置各种需要的开关、警报、以及远程通知规则，而要落实这些规则就需要使用到传感器、电磁阀、警报器等物理执行机构。软件，特别是API服务也是如此，即使规则设计得再好，如果功能实现或服务部署层面出现缺失或不完善的话，授权管理也是不工作的，我们在前面提到的OWASP API Security Top 10中的API1-失效的对象级授权和API5-失效的功能级授权中的很多漏洞都是由此产生的。</p>
+<p>再次强调，访问控制是API安全中非常重要的环节。我们平常在述及API安全时经常听到”认证授权”，却很少提及”访问控制”，为了加深对访问控制的映像，我们可以再举一个身边的例子：购票乘坐高铁。<br>旅客购买高铁车票时，首先需要提供身份证，这个环节就是<code>认证</code>，有时我们可能没有身份证，那么也可以提供户口本、护照、港澳通行证等，这就是<code>第三方认证</code>，无论是使用身份证进行单方认证还是使用其他证件进行第三方认证，认证的目的都是获取旅客真实的个人身份信息。而后铁路公司在收取车票钱后就会出票，出票的过程就是<code>授权</code>，旅客拿到的车票就是<code>授权凭证</code>，也就是下面我们会提到的OAuth协议中的<code>Access Token</code>，车票中会写明我们乘坐的座位信息，包括乘车日期、几车几号、始发与终点站等等，这些信息就是Access Token中的<code>Claims</code>，其中肯定会有一个非常重要的信息：一等座还是二等座，这就对应了Claims中的<code>Scope</code>。旅客在获取车票后，就完成了认证授权的全过程，剩下的就是拿着车票去乘高铁了。在乘车的过程中，如果拿二等座的票去做一等座的座位，又或者拿3车的车票去坐5车的座位，肯定会被乘务人员阻止的，乘务人员的这一系列验票验座、甚至驱赶旅客下车的操作就是<code>访问控制</code>。所以，无论认证授权做得再好，访问控制实施不当，API安全就是竹篮打水一场空。</p>
+<h2 id="常见的API授权与访问控制技术"><a href="#常见的API授权与访问控制技术" class="headerlink" title="常见的API授权与访问控制技术"></a>常见的API授权与访问控制技术</h2><p>在API服务领域，授权与访问控制相关的技术比较分散，常见的成熟方案主要包括：</p>
+<ul>
+<li><code>基于用户身份或被访问资源的OAuth授权协议</code>，毫无疑问是目前API领域使用最广泛的技术；</li>
+<li><code>基于角色的访问控制（Role-Based Access Control）模型</code>，RBAC得益于它通过用户角色来实现权限控制的理念，使其在产品级应用中大量使用，从传统的操作系统、数据库，到现代的K8s、OpenStack都能看到它的身影；</li>
+<li><code>基于属性的访问控制（Attribute-Based Access Control）模型</code>，ABAC则基于对象的各种属性来进行控制判断，比如K8s中使用它来进行亲合度与污点的判断从而控制资源的调配，ABAC的使用规模没有RBAC大，通常单点使用较多；</li>
+<li><code>基于上下文的访问控制（Context-Based Access Control）模型</code>，CBAC是基于通信上下文的控制模型，需要结合数据流来进行分析判断，在防火墙产品中使用较多；</li>
+<li><code>基于访问控制列表（Access Control List）的控制</code>，ACL则是相对更常见和简单粗暴的控制方式了，普遍应用于路由器的访问规则、IP控制表、黑白名单等；</li>
+</ul>
+<p>由于体力和技术应用对象的关系，我们下面只重点关注OAuth的相关技术与安全测试。</p>
+<h2 id="OAuth的授权技术"><a href="#OAuth的授权技术" class="headerlink" title="OAuth的授权技术"></a>OAuth的授权技术</h2><p>OAuth协议的产生主要是为了解决在不共享密码的情况下、从第三方服务获取受保护的个人数据的问题。OAuth有1.0和2.0两个版本，1.0版本因为存在一些安全隐患，已经基本弃用，所以目前所说OAuth主要都是指的OAuth2.0。下图是OAuth的抽象流程图，细心的同学也许可以发现，虽然OAuth的抽象流程图与OIDC相比有一些细节的结构区别，但两者的访问流程几乎是完全相同的。事实也确实如此，因为OIDC协议就是基于OAuth扩展而来的。</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OAuth_core_flow.png" alt="OAuth抽象流程图"></p>
+<p>在上图中的第(2)步，根据授权凭证（Authorization Grant）类型的不同，OAuth的授权又分为不同的模式：</p>
+<ul>
+<li><code>授权码模式</code>，客户端从授权服务端获得授权码，以授权码作为客户端与用户（即资源所有者）之间的中介，向授权服务端换取Access Token，再使用Access Token来访问用户的资源；</li>
+<li><code>简化授权码模式</code>，即对授权码模式进行简化后的流程模式，又称隐式流模式，该模式最大的特点就是省去了授权码，直接获取Access Token，这种方式主要用于没有单独的客户端后端的授权情况，比如Web SPA应用、手机APP应用获取授权；</li>
+<li><code>密码模式</code>，客户端直接使用用户的密码来获取Access Token；</li>
+<li><code>客户端凭证模式</code>，客户端使用已经获取的授权凭证来换取Access Token，比如使用secretKey来换取Access Token；</li>
+<li><code>设备码模式</code>，主要用于对没有浏览器等缺乏用户输入手段的设备进行授权，比如打印机、多媒体控制器等；</li>
+</ul>
+<p>各种认证模式的协议流程图如下图所示：</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OAuth_all_flow.png" alt="OAuth授权模式"></p>
+<p>需要指出的是，简化授权码模式和密码模式由于其安全性较差，已经基本弃用，且被最新的OAuth2.1版本（草案）移除了。即便是相对安全的授权码模式，也存在授权码遭受劫持的可能，所以2015年OAth对授权码模式提出了PKCE（Proof Key for Code Exchange）扩展。OAuth使用授权码+PKCE的协议流程如下图所示：</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/OAuth_pkce.png" alt="OAuth授权模式"></p>
+<p>PKCE与普通授权码模式的区别就在于发送授权请求时要额外携带code_challenge和code_challenge_method参数，而在使用授权码换取Access Token时的请求要额外携带code_verifier参数，其中，code_verifier为一串随机数，每次请求都不相同，code_challenge_method指定计算code_challenge的方法，只能选plain或者S265，且</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># 当code_challenge_method为plain时</span><br><span class="line">code_challenge = code_verifier</span><br><span class="line"></span><br><span class="line"># 当code_challenge_method为S265时</span><br><span class="line">code_challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))</span><br></pre></td></tr></table></figure>
+<p>PKCE的方案最初是为了解决公共应用（Mobile、Desktop、Web SPA等）授权码被劫持的问题，因为这些公共应用都是在用户手中直接跟授权服务通讯，在客户端保存着获取Access Token的另外一个重要参数client_secret，如果应用被反编译或者以其它的方式泄露了client_secret，再遭遇授权码劫持的话，攻击者就能获取用户的Access Token。而加上PKCE的协议，即便攻击者劫持了授权码，只要没有正确的code_verifier也就无法获取其它用户的Access Token。</p>
+<blockquote>
+<p>通过劫持授权码来获取Access Token理论上只能对公共应用发起攻击，因为机密应用的client_secret都保存在后端，由后端使用授权码+client_secret向授权服务请求Access Token。比如我们常见的前后端分离的Web应用就由BFF保存client_secret来向授权服务请求Access Token，所以对机密应用来说，攻击者通常无法获取client_secret，那么劫持授权码也就没有作用。然而，基于PKCE更好的安全性，OAuth2.1建议在所有应用中使用PKCE模式。</p>
+</blockquote>
+<h2 id="QA可以采取的安全保障工作-1"><a href="#QA可以采取的安全保障工作-1" class="headerlink" title="QA可以采取的安全保障工作"></a>QA可以采取的安全保障工作</h2><p>OAuth作为目前使用最广的API授权协议，尽管其协议流程本身已经在行业中经历了实战的考验，但围绕OAuth周遭的安全问题也是常有发生的，QA应该对其抱有足够的重视。同样，基于QA的能力范畴，我们通常可以从以下方面予以关注：</p>
+<h3 id="QA要对授权管理的分类有正确的理解和业务敏感度"><a href="#QA要对授权管理的分类有正确的理解和业务敏感度" class="headerlink" title="QA要对授权管理的分类有正确的理解和业务敏感度"></a>QA要对授权管理的分类有正确的理解和业务敏感度</h3><p>功能授权容易实现，但数据授权却往往容易被忽略，需要额外关注。比如，在业务分析时如果遇到与授权相关的场景，既要考虑功能的授权校验，也要考虑数据的授权校验。</p>
+<h3 id="督促团队及时评估和更新OAuth客户端SDK"><a href="#督促团队及时评估和更新OAuth客户端SDK" class="headerlink" title="督促团队及时评估和更新OAuth客户端SDK"></a>督促团队及时评估和更新OAuth客户端SDK</h3><p>OAuth是开放协议，不同平台、不同开发语言一般都有各自的OAuth实现，团队在使用的时候也几乎不会自己独立实现一套OAuth，而是根据项目的技术栈选择合适的OAuth SDK来使用。而这些SDK自身也是可能存在漏洞的，比如，HelloJS就是标准的OAuth客户端SDK，就曾经出现过<a target="_blank" rel="noopener" href="https://nvd.nist.gov/vuln/detail/CVE-2020-7741">CVE-2020-7741</a>这个安全漏洞：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">&#x27;oauth_redirect&#x27;</span> <span class="keyword">in</span> p) &#123;</span><br><span class="line">    location.assign(<span class="built_in">decodeURIComponent</span>(p.oauth_redirect));</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在以上早期代码中，SDK直接使用了参数中的<code>.oauth_redirect</code>进行页面跳转而没有做相应的URL校验，这就可能允许XSS攻击的发生。HelloJS在其后的版本中修复的这个漏洞，其代码如下：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (<span class="string">&#x27;oauth_redirect&#x27;</span> <span class="keyword">in</span> p) &#123;</span><br><span class="line">    <span class="keyword">var</span> url = <span class="built_in">decodeURIComponent</span>(p.oauth_redirect);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isValidUrl(url)) &#123;</span><br><span class="line">        location.assign(url);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以团队需要及时评估自己使用的OAuth客户端SDK的版本，根据情况适时更新；</p>
+<h3 id="对redirect-uri的测试检查"><a href="#对redirect-uri的测试检查" class="headerlink" title="对redirect_uri的测试检查"></a>对redirect_uri的测试检查</h3><p>OAuth协议中使用的redirect_uri参数是另一个被高频攻击的对象，因为围绕URI实施的攻击难度相对较低，所以QA需要：</p>
+<ul>
+<li>检查授权服务的配置中正确地绑定了客户端的client_id与redirect_uri；</li>
+<li>测试验证授权服务对接收到的redirect_uri参数做了严格的一致性校验，禁止使用通配、包含、正则表达式等匹配规则；</li>
+</ul>
+<h3 id="关注对授权码的测试检查"><a href="#关注对授权码的测试检查" class="headerlink" title="关注对授权码的测试检查"></a>关注对授权码的测试检查</h3><p>授权码是OAuth协议中非常重要的中间信物，很多会话劫持都是围绕授权码展开的，所以需要重点关注：</p>
+<ul>
+<li>测试验证授权码的实现是无规律、且是一次性的；</li>
+<li>测试验证、或向开发同学确认不同客户端之间不会共用相同的授权码；</li>
+<li>按照OAuth的协议，state参数在发送授权码时是可选参数，但从安全的角度来说最好要使用，所以QA可以建议团队将state参数纳入设计与实现，并予以测试验证；</li>
+<li>在条件允许的情况下，建议团队使用PKCE扩展；</li>
+</ul>
+<h3 id="对Access-Token的测试验证"><a href="#对Access-Token的测试验证" class="headerlink" title="对Access Token的测试验证"></a>对Access Token的测试验证</h3><p>客户端拿到Access Token后，授权的过程实质上就已经完成了。这时需要关注的就是访问控制了，只有正确的实现了访问控制，颁发的Access Token才有实际的意义，对此，QA可以关注：</p>
+<ul>
+<li>测试验证设计要求的所有API接口都必须使用Access Token才能访问，特别是对多版本并存的API，一定要校验老版本接口的访问控制；</li>
+<li>测试使用过期的Access Token；</li>
+<li>测试使用已经失效的Access Token，比如已经使用Refresh Token换取了新的Access Token，老的Access Token应该失效，又比如logout后原有的Access Token应该失效；</li>
+<li>测试使用用户A的Access Token访问用户B的资源；</li>
+<li>对有功能权限管理的业务，测试使用Access Token去进行不被授权的操作，比如，普通用户登录后获取的Access Token，不能访问创建用户的POST接口；</li>
+<li>对有数据权限管理的业务，测试使用Access Token去访问不被授权的数据，比如，普通用户登录后获取的Access Token，在访问查询数据的GET接口时，只能获取其被授权的数据；</li>
+</ul>
+<h1 id="JWT的相关测试验证"><a href="#JWT的相关测试验证" class="headerlink" title="JWT的相关测试验证"></a>JWT的相关测试验证</h1><p>在API的认证授权以及其他一些数据传输的过程中，JWT是十分常用的组件，也是可能造成信息泄露的安全隐患之一，QA需要对JWT的基本知识有所了解。</p>
+<p>JWT来自于JOSE（Javascript Object Signing and Encryption）协议栈，JOSE包括以下主要内容：</p>
+<ul>
+<li><code>JWT（JSON Web Token）</code>，由<a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-json-web-token">RFC7519规范</a>定义的使用JSON对象在通信中进行交互的标准数据格式，就是我们常说的JWT；</li>
+<li><code>JWS（JSON Web Signature）</code>，针对JWT进行数字签名的操作规范；</li>
+<li><code>JWE（JSON Web Encryption）</code>，针对JWT进行加密的操作规范；</li>
+<li><code>JWK（JSON Web Key）</code>，描述JWE加密时使用的密钥数据结构的规范；</li>
+<li><code>JWA（JSON Web Algorithm）</code>，定义JWS或JWE中使用的算法列表；</li>
+</ul>
+<p>事实上，JWT只是抽象层的数据格式定义，真正有实际操作指导作用的是JWS和JWT，换句话说，JWT是抽象，JWS和JWE是JWT的具体实现方式，而JWK和JWA则是实现过程中会使用到的数据和算法规范。我们平常在网上看到的关于JWT的介绍，绝大多数讲的都是<code>header.payload.signature</code>的三段式编码字符串，其实质就是JWS，也是使用最广泛的JWT。使用RS265签名算法创建JWS的过程如下图所示：</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/JWT_JWS.png" alt="OAuth授权模式"></p>
+<p>JWS实现的是标准的JWT数据结构，包含：</p>
+<ul>
+<li><code>Header（JOSE标头）</code>，用来声明签名算法、令牌类型等信息，比如上图中就声明了使用RS256签名算法；</li>
+<li><code>Payload （有效载荷）</code>，用来装配需要传输的数据信息，payload可以是任意类容，并且从技术上来说，可以不是标准的JSON数据结构；</li>
+<li><code>Signature（签名）</code>，根据header和payload、再加上所选择的签名算法计算得到的签名字符串；</li>
+</ul>
+<p>需要强调的是，JWT/JWS中的payload看起来是一串随机的字符串，但它仅仅是经过base64url编码得到的，并没有经过加密，是可以解码还原的，所以payload的内容在JWT/JWS中和明文没有区别。另外，JWT数据结构是允许不携带签名的，也就是说<code>base64url(header).base64url(payload).</code>这样的数据结构也是合法的JWT，但很显然，JWS是必须使用签名的，否则就没有意义了，因为签名的目的，就是为了解决JWT的payload在传输过程中被篡改的问题，从而保障数据的完整性和一致性。</p>
+<p>再次强调：JWT/JWS传输的数据是没加密的明文！明文！明文！所以千万不要使用JWT传输敏感信息。如果真的需要使用JWT来传输敏感信息，就需要使用JWE。JWE是专门针对传输数据进行加密的JWT操作规范，具体的协议细节大家可以查阅<a target="_blank" rel="noopener" href="http://tools.ietf.org/html/draft-ietf-jose-json-web-encryption">官网</a>，这里就不在赘述了（实在没体力了OTL）。如何区别JWT是JWS还是JWE呢？很简单，JWS是三段字符串，而JWE是五段字符串：</p>
+<p><img src="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/JWT_JWS_JWE.png" alt="OAuth授权模式"></p>
+<h2 id="QA可以采取的安全保障工作-2"><a href="#QA可以采取的安全保障工作-2" class="headerlink" title="QA可以采取的安全保障工作"></a>QA可以采取的安全保障工作</h2><p>JWT属于数据传输过程中的技术，一般来说需要QA介入进行安全测试的切点并不多，更多的是需要开发同学在使用JWT时遵循各种安全实践，QA可以对此做一些审查、提醒的帮助：</p>
+<ul>
+<li>验证使用的JWT/JWS中没有传输铭感、机密数据；</li>
+<li>如果业务上需要使用JWT传输敏感、机密数据，提醒开发同学不能使用JWS，而要使用JWE，或者使用其它的加解密方案（比如将数据加密后再放到JWS的payload中），并做相应的代码审查（不用害怕看不懂代码，让Dev把关键步骤show出来讲清楚就行）；</li>
+<li>提醒开发同学不能在代码中硬编码密钥，密钥如果以文件方式存在，密钥文件要被命名为复杂且不易被猜测的文件名，且必须放在有权限访问控制的目录中，不能放在Web服务器的应用目录；</li>
+<li>JWT允许定义签名算法集、然后在传输过程中选择使用某种签名算法，但从安全的角度来说，不要这样做。应该由服务端指定唯一的签名算法，不接受客户端选择的签名算法，QA需要对此有所警醒；</li>
+<li>提醒开发同学，一定使用携带签名的JWS，在使用JWS时，一定要验签，对此QA可以让开发同学协助审查代码（不要觉得这些显而易见的事情没必要，有的项目就曾遇到过在协议设计中要求的加解密操作，在具体的代码实现中被遗漏了，而缺少加解密对业务功能又没有直接影响，除非进行有针对性的渗透测试，否则很难被发现）；</li>
+</ul>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>API安全是一个十分重要敏感、同时又非常宽泛的话题，绝不是一两篇文章就能叙之以全的。我们这里介绍的类容：OWASP API Security Top 10、认证、授权、访问控制、JWT等等，都只是API安全领域非常基础的部分，对它们的安全保障实践也是针对QA力所能及的、最基本的方式。在实际的项目开发中，真正会面对的问题往往会更加复杂，对安全方面的测试挑战也会更高。特别是对于认证、授权的流程测试，我们文中谈到的OIDC、OAuth仅仅是基础中的基础，现实项目中都会在这些标准规范的基础上叠加支撑各自业务需求的特征功能，比如在认证过程中引入OTP验证、生物识别等多要素认证，又或者在授权过程中叠加SSO等，所以不同项目中的实际情况通常会复杂很多。但无论具体项目中的实现多么复杂，我们这里总结分享的安全保障措施都是可以适用的，它们是基础，离开它们就谈不上安全测试，但仅仅依靠它们，也做不好安全测试。所以，立足基础、快速学习、应用变通永远都是QA的生存之道。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8A%E7%AF%87/" rel="prev" title="QA视角下的API安全测试-上篇">
+      <i class="fa fa-chevron-left"></i> QA视角下的API安全测试-上篇
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E8%AE%A4%E8%AF%81%E7%9A%84%E7%9B%B8%E5%85%B3%E5%9F%BA%E7%A1%80"><span class="nav-number">1.</span> <span class="nav-text">服务认证的相关基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84%E8%BA%AB%E4%BB%BD%E8%AE%A4%E8%AF%81%E6%8A%80%E6%9C%AF"><span class="nav-number">1.1.</span> <span class="nav-text">常用的身份认证技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#QA%E5%8F%AF%E4%BB%A5%E9%87%87%E5%8F%96%E7%9A%84%E5%AE%89%E5%85%A8%E4%BF%9D%E9%9A%9C%E5%B7%A5%E4%BD%9C"><span class="nav-number">1.2.</span> <span class="nav-text">QA可以采取的安全保障工作</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%8E%88%E6%9D%83%E7%9A%84%E7%9B%B8%E5%85%B3%E5%9F%BA%E7%A1%80"><span class="nav-number">2.</span> <span class="nav-text">服务授权的相关基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6"><span class="nav-number">2.1.</span> <span class="nav-text">访问控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84API%E6%8E%88%E6%9D%83%E4%B8%8E%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E6%8A%80%E6%9C%AF"><span class="nav-number">2.2.</span> <span class="nav-text">常见的API授权与访问控制技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OAuth%E7%9A%84%E6%8E%88%E6%9D%83%E6%8A%80%E6%9C%AF"><span class="nav-number">2.3.</span> <span class="nav-text">OAuth的授权技术</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#QA%E5%8F%AF%E4%BB%A5%E9%87%87%E5%8F%96%E7%9A%84%E5%AE%89%E5%85%A8%E4%BF%9D%E9%9A%9C%E5%B7%A5%E4%BD%9C-1"><span class="nav-number">2.4.</span> <span class="nav-text">QA可以采取的安全保障工作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#QA%E8%A6%81%E5%AF%B9%E6%8E%88%E6%9D%83%E7%AE%A1%E7%90%86%E7%9A%84%E5%88%86%E7%B1%BB%E6%9C%89%E6%AD%A3%E7%A1%AE%E7%9A%84%E7%90%86%E8%A7%A3%E5%92%8C%E4%B8%9A%E5%8A%A1%E6%95%8F%E6%84%9F%E5%BA%A6"><span class="nav-number">2.4.1.</span> <span class="nav-text">QA要对授权管理的分类有正确的理解和业务敏感度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9D%A3%E4%BF%83%E5%9B%A2%E9%98%9F%E5%8F%8A%E6%97%B6%E8%AF%84%E4%BC%B0%E5%92%8C%E6%9B%B4%E6%96%B0OAuth%E5%AE%A2%E6%88%B7%E7%AB%AFSDK"><span class="nav-number">2.4.2.</span> <span class="nav-text">督促团队及时评估和更新OAuth客户端SDK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9redirect-uri%E7%9A%84%E6%B5%8B%E8%AF%95%E6%A3%80%E6%9F%A5"><span class="nav-number">2.4.3.</span> <span class="nav-text">对redirect_uri的测试检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E6%B3%A8%E5%AF%B9%E6%8E%88%E6%9D%83%E7%A0%81%E7%9A%84%E6%B5%8B%E8%AF%95%E6%A3%80%E6%9F%A5"><span class="nav-number">2.4.4.</span> <span class="nav-text">关注对授权码的测试检查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9Access-Token%E7%9A%84%E6%B5%8B%E8%AF%95%E9%AA%8C%E8%AF%81"><span class="nav-number">2.4.5.</span> <span class="nav-text">对Access Token的测试验证</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#JWT%E7%9A%84%E7%9B%B8%E5%85%B3%E6%B5%8B%E8%AF%95%E9%AA%8C%E8%AF%81"><span class="nav-number">3.</span> <span class="nav-text">JWT的相关测试验证</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#QA%E5%8F%AF%E4%BB%A5%E9%87%87%E5%8F%96%E7%9A%84%E5%AE%89%E5%85%A8%E4%BF%9D%E9%9A%9C%E5%B7%A5%E4%BD%9C-2"><span class="nav-number">3.1.</span> <span class="nav-text">QA可以采取的安全保障工作</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ariman</p>
+  <div class="site-description" itemprop="description">微服务 自动化测试 契约测试</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ariman</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":120,"height":350,"hOffset":-10,"vOffset":-150},"mobile":{"show":true},"react":{"opacity":1}});</script></body>
+</html>

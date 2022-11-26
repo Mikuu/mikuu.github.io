@@ -157,6 +157,153 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/" class="post-title-link" itemprop="url">QA视角下的API安全测试-下篇</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-11-23 12:02:51" itemprop="dateCreated datePublished" datetime="2022-11-23T12:02:51+08:00">2022-11-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-26 15:22:39" itemprop="dateModified" datetime="2022-11-26T15:22:39+08:00">2022-11-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>上篇中的OWASP API Security Top 10已经帮我们梳理了最常见的API安全问题，QA针对自己API服务的具体情况，开展有的放矢的测试和安全保障工作，能够在很大程度上扫除一大批基本的安全漏洞和隐患。这其中，作为API安全最关键的层面，API的认证与授权是整个测试工作中的重中之重。如果我们自己的团队负责构建了后端的认证授权服务，那么QA对认证授权的安全测试则需要更详细、更深入的关注。 值得一提的是，我们经常将”认证授权”放在一起描述，但认证、授权其实是两个不同的事件，我们接下来会对它们的常见方式和QA可以涉及的关注点进行介绍。</p>
+<h1 id="服务认证的相关基础"><a href="#服务认证的相关基础" class="headerlink" title="服务认证的相关基础"></a>服务认证的相关基础</h1><p>认证，Authentication，更准确一点的称谓应该是身份认证，主要功能是对服务的使用者进行身份的合法性校验，常见的身份认证方式主要有静态码、动态口令、短信码、数字证书、以及生物特征等。说到身份认证，我们经常将它解决的问题描述成”确定’你是谁’”，然而，更确切地来说，’你是谁’仅仅是确认身份的一个要素，除此之外，还有’你知道什么’、’你拥有什么’：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8A%E7%AF%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8A%E7%AF%87/" class="post-title-link" itemprop="url">QA视角下的API安全测试-上篇</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-11-23 12:02:43" itemprop="dateCreated datePublished" datetime="2022-11-23T12:02:43+08:00">2022-11-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2022-11-26 15:44:28" itemprop="dateModified" datetime="2022-11-26T15:44:28+08:00">2022-11-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>最近工作在一个跨国银行的项目上，整个项目是为客户构建一个面向终端用户的银行应用程序，包括Android、iOS、Web三前端及其配套的后端系统。我所在的团队负责其中的注册登录、会话管理、以及用户数据等和安全息息相关的部分。项目中，我们遇到了很多认证授权的具体实现及其测试需求，基于这样的背景，我觉得有必要对”以QA的视角、以API为对象、以安全为重点”的API安全测试进行一些整理总结，遂赘此文于斯。</p>
+<p>安全测试向来都是质量工程师和安全工程师所共同关注的交叉地带，有时候甚至非常不幸的是混沌地带。对应用程序或系统而言，质量工程师关注的重点通常都是功能实现，安全作为非功能需求中的一环，虽然所有人都不会质疑其重要性，但落实到具体的保障手段上来说，对一般的质量工程师而言，还是缺乏相应的金刚钻。当然，和质量类似，安全也不是测试出来的，它需要全局性的、流程性的保障手段，所以，相较于单纯的测试，我们现在更注重SDL、BSI、NIST、CLASP这些基于流程、过程、以及全生命周期的综合性安全保障方案。即便如此，对QA而言，掌握基本的安全测试理念和技能，在日常测试工作中更有目的性和针对性的实施和安全相关的测试活动，还是非常有必要的。毕竟，对团队来说，大家还是期望在提交渗透测试之前能够有一些基本的安全信心。</p>
+<p>在软件开发的过程中，和安全相关的实体是很多的，从传统的前端应用、后端服务，到基础设施、乃至业务逻辑本身都可能存在安全风险，我们这里将以QA的视角，单独聚焦后端API的安全测试问题。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8A%E7%AF%87/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/05/16/%E5%9B%BE%E5%83%8F%E5%AF%B9%E6%AF%94%E5%9C%A8UI%E6%B5%8B%E8%AF%95%E4%B8%AD%E7%9A%84%E5%AE%9E%E8%B7%B5-%E6%8A%80%E6%9C%AF%E7%AF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -580,7 +727,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -608,7 +755,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
