@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://yoursite.com/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/assertionInPO.png">
 <meta property="og:image" content="http://yoursite.com/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/pageComponent.png">
 <meta property="article:published_time" content="2023-06-01T02:47:51.000Z">
-<meta property="article:modified_time" content="2023-06-08T07:52:44.554Z">
+<meta property="article:modified_time" content="2023-06-08T07:56:41.927Z">
 <meta property="article:author" content="Ariman">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://yoursite.com/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/loginPage.png">
@@ -194,7 +194,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2023-06-08 15:52:44" itemprop="dateModified" datetime="2023-06-08T15:52:44+08:00">2023-06-08</time>
+                <time title="修改时间：2023-06-08 15:56:41" itemprop="dateModified" datetime="2023-06-08T15:56:41+08:00">2023-06-08</time>
               </span>
 
           
@@ -302,7 +302,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> class <span class="title">LoginPage</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">login</span><span class="params">(String username, String password)</span> </span>&#123;</span><br><span class="line">        inputUsername(username);</span><br><span class="line">        logger.info(<span class="string">&quot;input username: &quot;</span> + username);</span><br><span class="line">        </span><br><span class="line">        inputPassword(password);</span><br><span class="line">        logger.info(<span class="string">&quot;input password: &quot;</span> + password);</span><br><span class="line">        </span><br><span class="line">        WebElement loginButton = driver.findElement(By.id(loginButton));</span><br><span class="line">        loginButton.click();</span><br><span class="line">        </span><br><span class="line">        logger.info(<span class="string">&quot;logged in&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>如果需要收集日志，应该交给执行测试的runner或者运行测试的命令行工具去控制。对于日志，值得多提几句的是，同样是写代码，开发代码与测试代码对日志的需求是完全不同的。以后端服务为例，Service的运行代码中包含大量的日志打印是为了在出现异常情况时留下线索帮助事后分析问题。服务处理的事件很多情况都是无序、无状态、甚至有些是异步或难以复现的，特别是微服务系统，为了还原一个异常事件的前因后果，往往可能需要在多个系统的日志信息中去寻找蛛丝马迹，所以服务往往需要大量精准的日志打印工作。相对的，测试案例的场景和参数往往都是固定的（当然也有少数的动态参数），所有的操作步骤也都是有序执行的（这里仅考虑同一个测试案例的执行，不考虑并行执行、甚至竞争执行的情况），出现问题时可以通过异常发生的代码行数快速摸清整个场景的前后流程，所以日志打印对测试代码来说绝大多数情况下都是不必要的。</p>
 <p>至于异常处理，对自动化测试来说，除了一些需要特别关照的”骚操作”外，尽量不要去主动捕获异常，测试执行遇到异常该挂就挂，该中断就中断。开发代码使用try-catch是为了让应用在遇到异常时仍然可以继续工作，而测试代码的目的则是发现错误。错误是SUT的就让开发去修，错误是测试的就让QA去修，修不好就让它挂着，挂到修好为止。千万不要为了让测试能跑起来就去盲目的添加各种try-catch，否则一旦处理不当就能坑死人。开篇说的那个3000行PageObject的自动化测试项目，就在处理配置文件时错误的使用了try-catch，致使测试在缺少一些关键配置项的情况下任然启动执行，最终导致部分测试案例出现了匪夷所思的行为，给调试工作带来了巨大的麻烦。</p>
-<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>作为免责声明，最后还是高亮一下：以上内容既不是什么金科玉律，也谈不上什么最佳实践，只是基于我个人的实操、观察与思考得来的心得体会，纯属一家之言，还望观着自己思辨。</p>
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>作为免责声明，最后还是高亮一下：以上内容既不是什么金科玉律，也谈不上什么最佳实践，只是基于我个人的实操、观察与思考得来的心得体会，纯属一家之言，还望观者自己思辨。</p>
 
     </div>
 
