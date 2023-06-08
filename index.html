@@ -157,6 +157,80 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/" class="post-title-link" itemprop="url">从一个3000行的登录页面聊PageObject</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-01 10:47:51" itemprop="dateCreated datePublished" datetime="2023-06-01T10:47:51+08:00">2023-06-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-06-06 16:28:13" itemprop="dateModified" datetime="2023-06-06T16:28:13+08:00">2023-06-06</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>最近帮助一个客户项目改进它们的自动化测试，SUT是一个分别基于iOS和Android进行原生开发的APP，客户团队的即有测试代码使用Cucumber、Appium、WebDriver构建，属于非常典型的UI自动化测试套装。代码的层级结构大致如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">└── Tests/</span><br><span class="line">    ├── features/</span><br><span class="line">    │   ├── login.feature</span><br><span class="line">    │   ├── shopping.feature</span><br><span class="line">    │   ├── register.feature</span><br><span class="line">    │   └── ...</span><br><span class="line">    ├── glues/</span><br><span class="line">    │   ├── login.glue</span><br><span class="line">    │   ├── shopping.glue</span><br><span class="line">    │   ├── register.glue</span><br><span class="line">    │   └── ...</span><br><span class="line">    ├── pageObjects/</span><br><span class="line">    │   ├── loginPage.java</span><br><span class="line">    │   ├── homePage.java</span><br><span class="line">    │   ├── paymentPage.java</span><br><span class="line">    │   └── ...</span><br><span class="line">    └── utils/</span><br><span class="line">        ├── fileHandling.java</span><br><span class="line">        ├── environmentConfig.java</span><br><span class="line">        └── ...</span><br></pre></td></tr></table></figure>
+<p>整个测试代码粗看起来有板有眼，feature文件中合理的使用了数据驱动，glue文件中对step的定义和参数化都还不错。但翻看到PageObject时就傻眼了，一个登录页面的PageObject竟然有3000行代码！是的，你没看错，足足3000行，是QA测试登录页面的PageObject代码，而不是Dev开发登录页面的代码。这个页面本身没有复杂的交互与功能设计，比如Social Login、单页注册等，就是一个非常简单、传统的登录页面，类似下面这样：</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2022/11/23/QA%E8%A7%86%E8%A7%92%E4%B8%8B%E7%9A%84API%E5%AE%89%E5%85%A8%E6%B5%8B%E8%AF%95-%E4%B8%8B%E7%AF%87/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -335,7 +409,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-11-26 17:10:42" itemprop="dateModified" datetime="2022-11-26T17:10:42+08:00">2022-11-26</time>
+                <time title="修改时间：2022-11-26 17:11:48" itemprop="dateModified" datetime="2022-11-26T17:11:48+08:00">2022-11-26</time>
               </span>
 
           
@@ -801,7 +875,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -829,7 +903,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2022</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
