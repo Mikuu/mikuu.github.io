@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="年中从某个跨国银行项目上下来之后，稍作休息就开始了某个新项目的整备工作。这个项目据说是我司第一个零售电商项目，从前期得到的信息来看，React构建的前端Web网站，提供标准REST API的CMS平台系统，以及后端的企业级ERP系统，无疑对QA来说都是非常友好的，各种前后端自动化测试应该是可以无缝儿畅玩儿的，我甚至连怎么“忽悠”客户给我资源搭建Micoo的词儿都想好了。然而，接下来几个月发生的事情">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在无头电商项目中的QA踩坑纪实">
+<meta property="og:url" content="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/index.html">
+<meta property="og:site_name" content="Ariman&#39;s Lazy Blog">
+<meta property="og:description" content="年中从某个跨国银行项目上下来之后，稍作休息就开始了某个新项目的整备工作。这个项目据说是我司第一个零售电商项目，从前期得到的信息来看，React构建的前端Web网站，提供标准REST API的CMS平台系统，以及后端的企业级ERP系统，无疑对QA来说都是非常友好的，各种前后端自动化测试应该是可以无缝儿畅玩儿的，我甚至连怎么“忽悠”客户给我资源搭建Micoo的词儿都想好了。然而，接下来几个月发生的事情">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/meidi.png">
+<meta property="og:image" content="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/vtex.png">
+<meta property="og:image" content="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/art.png">
+<meta property="og:image" content="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/value.png">
+<meta property="article:published_time" content="2023-11-30T13:36:26.000Z">
+<meta property="article:modified_time" content="2023-12-19T06:40:39.041Z">
+<meta property="article:author" content="Ariman">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/meidi.png">
+
+<link rel="canonical" href="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>在无头电商项目中的QA踩坑纪实 | Ariman's Lazy Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143312940-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-143312940-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ariman's Lazy Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Ariman">
+      <meta itemprop="description" content="微服务 自动化测试 契约测试">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ariman's Lazy Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          在无头电商项目中的QA踩坑纪实
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-11-30 21:36:26" itemprop="dateCreated datePublished" datetime="2023-11-30T21:36:26+08:00">2023-11-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2023-12-19 14:40:39" itemprop="dateModified" datetime="2023-12-19T14:40:39+08:00">2023-12-19</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>年中从某个跨国银行项目上下来之后，稍作休息就开始了某个新项目的整备工作。这个项目据说是我司第一个零售电商项目，从前期得到的信息来看，React构建的前端Web网站，提供标准REST API的CMS平台系统，以及后端的企业级ERP系统，无疑对QA来说都是非常友好的，各种前后端自动化测试应该是可以无缝儿畅玩儿的，我甚至连怎么“忽悠”客户给我资源搭建Micoo的词儿都想好了。然而，接下来几个月发生的事情，着实让我重温了一把什么叫天真。</p>
+<h1 id="“两个月捏一个美的官网”"><a href="#“两个月捏一个美的官网”" class="headerlink" title="“两个月捏一个美的官网”"></a>“两个月捏一个美的官网”</h1><p>这个项目的客户是一家跨国的家电制造商，自己生产冰箱、吸尘器、烤箱、空调等各种大小家电，类似国内的美的。项目的目标是给客户在T国市场构建新的零售电商网站，用以替换其目前的低效站点，至于老站点怎么个低效法儿，这里就不细说了。我如果没有记错的话，这个项目前期准备从五月份就开始了，直到九月份才正式开始动工写代码，前期的拉扯甚是冗长。而客户挖的第一个坑就是“十一月中上线”！没错，两个月给它捏一个“美的官网”，这里的“捏”可不仅仅是换个肤拉个皮尔的简单替换前端UI，而是要实现整个零售电商的全数据量打通，包括产品、库存、价格、订单、促销等等一切周围系统。客户之所以有这个“底气”要求两个月完成这一切，是因为他们购买了一个商业的电商管理平台VTEX。VTEX以PaaS的方式提供了运营电商网站的近乎所有功能，而客户的期望就是以VTEX为核心，向上打造新的官方购物网站，向下集成各个已有的ERP系统，从而完成对老旧站点的替换。</p>
+<p><img src="/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/meidi.png" alt="Meidi"></p>
+<p>感兴趣的同学可以去VTEX的官网溜达溜达，它目前为超过3400家网店提供服务，客户包括三星、可口可乐、马自达、尼桑、雀巢、沃尔玛、家乐福、摩托罗拉、索尼、欧莱雅等众多知名企业。作为PaaS，VTEX为其整个电商系统的各项功能提供了非常丰富的REST API接口来帮助客户对接其各自的ERP系统，从而实现生产数据的快速打通。说这么多废话（不好意思，确实是废话），目的不是给VTEX打广告，而是想让大家体会一下为什么客户觉得两个月就能捏出一个购物网站。</p>
+<p><img src="/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/vtex.png" alt="VTEX"></p>
+<p>那么，按理来说，客户与VTEX的合作应该是郎才配女貌、豺狼配虎豹，这中间又有咋TW啥事儿呢？是的，这个问题是我们所有团队成员刚上项目时都问过的问题，答案是VTEX只希望作为PaaS的提供者给客户开个号就等着数钞票，而客户如果想要自定义某些功能或者本地化某些需求，就得另请高明，哦，对了，要实现和客户已有ERP系统的集成也是需要有人来干活儿的，而这就是TW出现的原因。一句话来说，TW是客户这个项目中的Integrator。</p>
+<p>请不要厌烦为什么要讲这么多项目的上下文，因为正是这些上下文以及TW在整个项目中的角色引出了后来的种种问题。</p>
+<h1 id="九月秋风似牛刀"><a href="#九月秋风似牛刀" class="headerlink" title="九月秋风似牛刀"></a>九月秋风似牛刀</h1><p>还记得上面提到的项目目标吗，顶层实现一个零售购物网站，其下对接VTEX平台，再下面是VTEX平台与客户ERP系统的集成，这里的集成在系统架构上由Integration Layer来实现（也就是几个微服务而已，没什么玄乎的）。还记得上面说的第一个坑吗，十一月上线，Not Movable，为什么，因为客户的底层ERP系统为了适配这个项目，需要有功能修改和部署上线，而那个ERP系统服务于客户的全球市场，有严格的上线时间窗口，最近的一次，就是在十一月，错过了，就得等下一次（什么，你问下一次是什么时候？骚年，你觉得问了有意义吗？你觉得客户会让我们苟到下一次吗？）。于是，围绕这个时间点，从架构到需求，从时间线到人员配置，各种讨论各种计划，最后的结论是：做不完！怎么办呢？带着客户砍需求呗，这不是咱TW的拿手好戏吗。于是，九月秋风似牛刀，咔咔咔几刀下去，直接把顶层的零售网站给端了。是的，你没看错，第一阶段，官方网站不做了，只做VTEX和ERP系统的集成，完成后，ERP系统单独部署上线，而Integration Layer只需要配合ERP系统完成联测验收、不需要上线。整个计划清晰明了，团队又看到了希望。</p>
+<p><img src="/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/art.png" alt="art"></p>
+<p>然而，正是这个“斩首计划”，给后面的开发测试工作铺下了天坑……</p>
+<h1 id="为了集成而做的集成"><a href="#为了集成而做的集成" class="headerlink" title="为了集成而做的集成"></a>为了集成而做的集成</h1><p>VTEX是一个后台系统，面向网店工作人员，而并不面向顾客，要想实现对下游数据系统的集成验证，就必须要有一个可以模拟顾客操作的入口，也就是能让顾客浏览商品并且下单购买。本来，这就是前端UI的功能，但现在UI不做了，那要怎么测试验证呢？这里再补充一个上下文，VTEX（公司）除了给客户提供一个VTEX后台系统（PaaS)，还在其上部署了一个测试用的购物网站，通过这个测试网站可以模拟购物下单（是的，你不用疑惑，这个测试网站就是那个被斩首的家伙……至少是前生）。</p>
+<p>于是乎，日月轮回、星辰交替，转眼间4周过去了，项目进入了SIT阶段。SIT的头三天，连接测试。是的，请不用惊讶，就是测试客户的ERP系统和我们的Integration Layer能否联通！换句话说，在SIT之前，这俩哥们儿就没“hi”过一次，所以，我们的整个Integration Layer是在没有经过调试（就更别说什么测试了）的情况下，裸奔进入SIT的，至于结果嘛，大家就可想而知咯。</p>
+<p>好了，如果你能坚持看到这里，恭喜你，无聊的纪实部分已过大半，接下来进入老少皆宜、人见人爱的踩坑环节。</p>
+<h2 id="Data-Mapping"><a href="#Data-Mapping" class="headerlink" title="Data Mapping"></a>Data Mapping</h2><p>对于零售电商系统来说，数据要打通各个环节、各个系统，大量的系统集成是毋庸置疑的。数据在各个系统之间流转时，往往存在格式转换，比如最常见的订单号，用户在商城看到的可能是1002123123，它在VTEX里面对应生成的订单号则可能是VT455766768，等传递到ERP系统后，则又可能生成另一个ER9893274823的订单号，所以多系统集成时，解决这种数据转换的常用方法一定是Data Mapping（数据映射）。在这个项目中，VTEX和Integration Layer之间，Integration Layer和ERP系统之间就都存在着大量的Data Mapping。对于QA来说，校验Data Mapping是非常重要的工作，也是我们在SIT期间翻车最多的问题。具体的问（扯）题（皮）我就不一一细说了，只是给出一些可能对大家有益的Check Points：</p>
+<ul>
+<li><code>id</code>，很常见，也很简单，但在系统集成的时候，一定要警惕它在不同系统之间的长度限制，别问我是怎么知道的；</li>
+<li><code>datetime</code>, 这货也很常见，在系统集成的时候，要留意两个点，一是有的系统可能只有date，没有time（坑你没商量），二是有的系统可能用UTC，有的系统可能用CET（商量了也照样坑你）；</li>
+<li><code>price</code>, 电商系统中，价格可以给你玩儿出花来，举个例子，在我们的系统集成中：100，100.00，”100”, “100.00”, “100.000”, “10000”等价，但不同系统用的却完全不同；</li>
+<li><code>address</code>, 一个地址，在不同的系统之间，有的可以给你拆成3段，有的可以给你拆成4段，有的可以给你拆成5段、6段、7段，所以，说实话，我到现在都一直认为应该把第一个想出“拆”地址的那哥们儿拖出去炮绝5分钟；</li>
+<li><code>associateId</code>, associateId这个字段可能不是那么的家喻户晓，简单来说，在订单中经常会有礼品，那么礼品是怎么来的？是通过买哪个商品赠送的？就需要通过类似associateId这样的字段来指定。但是，在不同的系统之间，它的指定方式可能完全不同，比如，我可以念张三的身份证号码来指定，也可以念张三的座位号来指定等等，所以，当发现集成中有associateId时，一定当心有坑，还是那句话，别问我是怎么知道的；</li>
+</ul>
+<p>集成经验丰富的同学可能会对这些问题不屑一顾：只要前期协商好契约，这些都不是问题。而作为踩坑经验丰富的QA，我想说的是，契约都是给人看的，但现实就有那些个你给了、人不看，等着现场开碰碰车，你能咋的？</p>
+<h2 id="踩雷式需求确认"><a href="#踩雷式需求确认" class="headerlink" title="踩雷式需求确认"></a>踩雷式需求确认</h2><p>在SIT期间遇到了一个非常郁闷的问题，前期TL、BA与客户澄清的订单流程是：下单 -&gt; 开始配送 -&gt; 开具发票。等到了SIT时，我们发现这个流程只对下单购买商品适用，对于下单购买服务就不适用了，比如下单购买保洁服务，就没有配送这个步骤，下单后后就可以直接开具发票了，这就导致我们的流程控制需要修改。 这是我们测试出来的结果，问客户，客户说：是的，就是那样的。顿时，我们脑海中一片万马奔腾……</p>
+<p>之所以会出现这样的问题，原因在于我们和客户ERP系统的集成关注的更多是数据：data mapping怎么做，VTEX能提供什么样的数据，ERP系统需要什么样的数据等等，至于流程，仅仅落地在有一条基本流程能够串通系统就成功了，而缺乏更多的对终端用户发起的不同流程的全面需求确认，为什么？因为终端被砍了呀！</p>
+<h1 id="尴尬的UAT"><a href="#尴尬的UAT" class="headerlink" title="尴尬的UAT"></a>尴尬的UAT</h1><p>生拉硬拽的SIT还没结束，UAT就开始了，而这个UAT本身就有很大的问题。我们都知道，UAT是业务团队为了验证即将上线的新产品、新功能而进行的测试活动，但这次UAT，面向用户的UI被砍掉，作为后台的VTEX又不会上线，真正要上线的仅仅是ERP系统的部分适配功能，而这部分功能在VTEX正式上线之前，压根儿就不会用到，所以对业务团队来说，这次的UAT没有任何业务价值。但是，基于客户的上线管理流程，ERP系统要上线，必须要拿到业务团队的Sign-off，所以就必须邀请业务团队来做UAT。于是乎，来自财务、运营、供应链等等不同部门的业务方受邀前来参加UAT，但当他们得知即将“验收”的对象只是一个简单的测试网站时，几乎所有人都失去了兴趣，其中一人表示“需要使用真实的支付方式才能验收”，之后就再没出席过后面几天的UAT了。好在我们的客户还是成功的定位了几名业务方成员，帮助完成了后面几天的UAT，要不然真不知道该如何收场。</p>
+<p>在此期间，我们也是继续被坑！</p>
+<h2 id="长臂依赖"><a href="#长臂依赖" class="headerlink" title="长臂依赖"></a>长臂依赖</h2><p>上面说过，VTEX是客户购买的PaaS，是整个系统的核心，TW作为Integrator参与这个项目。然而，我们的开发、测试、验收却着实受到了来自VTEX的影响。比如，经过前期的开发测试、SIT，VTEX中已经留存了不少脏数据，而我们却没有权限删除这些脏数据，能够清理脏数据的VTEX技术人员却又在SIT开始之前就休假去了，修了一个多月的假，而这期间，就因为脏数据的问题，我们第一天的UAT就被客户给毙了。又比如，UAT中盘，VTEX方在没有告知我们和客户的情况下，更新他们的数据库系统，期间出现问题，导致VTEX部分功能不可用，当天的UAT计划直接歇菜。对于这样的问题，别说我们TW，连客户自己有时都很难驾驭得了VTEX。所以，对于核心系统受控于人的项目，在做集成验收时一定要额外当心。</p>
+<h2 id="找正确的人做正确的事"><a href="#找正确的人做正确的事" class="headerlink" title="找正确的人做正确的事"></a>找正确的人做正确的事</h2><p>这又是另外一个非常有（鬼）趣（扯）的事情，在和客户ERP系统集成的过程中，对方有两个关键人物，一个是S，一个是D。S掌控ERP系统的需求决策，但却并不十分清楚ERP系统的细致操作，D是ERP系统的专业操作人员，整个SIT都由D和我们进行联测，但D却不拍板任何业务问题。</p>
+<ul>
+<li>在UAT的过程中，我们有好几个测试结果被S发现有问题，要求我们火线修复，但同样的测试结果却通过了SIT测试，这让我十分光火。后来复盘这个问题，发现SIT期间，D在和我们的协同测试中，仅仅验证了订单是否创建成功，而没有验证订单是否创建正确，而貌似只有S才会去验证订单的创建是否正确，但S在整个SIT期间却并没有做正确性的检查，只是把联测工作交给了D去单纯检查是否创单成功；</li>
+<li>另一方面，S和D身处两个国家有时差，通常每天上午的UAT开始的时候，S会先到，D稍后才到。于是，有一次的UAT测试过程中，S没等D上线，就自己错误的操作ERP系统，导致当天的UAT测试失败。另一次，又是S在UAT之前的Sanity Check中操作ERP系统失误，误导我们以为被测功能出现了问题而临时取消了测试；</li>
+</ul>
+<p>所以，即便是客户，也并非人人都是水木皆通。识别正确的人，让他们去做正确的事情，在系统集成的过程中尤为重要。</p>
+<h1 id="Lesson-amp-Learn"><a href="#Lesson-amp-Learn" class="headerlink" title="Lesson &amp; Learn"></a>Lesson &amp; Learn</h1><p>回顾整个项目的SIT和UAT，各种问题层出不穷，但最核心的，从QA的视角来看，是脱离了价值交付。当项目把UI去掉、仅仅聚焦VTEX和ERP系统之间的集成时，就为测试工作的失焦埋下了伏笔。</p>
+<p><img src="/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/2023/11/30/%E5%9C%A8%E6%97%A0%E5%A4%B4%E7%94%B5%E5%95%86%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84QA%E8%B8%A9%E5%9D%91%E7%BA%AA%E5%AE%9E/value.png" alt="value"></p>
+<p>任何时候，任何项目，测试工作都需要有明确的目标，通常这个目标就是验证明确的功能。那明确的功能由何而来？明确的功能来自于具体的需求，而具体的需求则来自于对业务的细致分析。对于零售电商系统来说，UI绝对是承载业务的最重要的起始要素。一旦脱离了UI，对整个系统的业务分析就可能是发散而无法收敛的，业务无法收敛，需求就无法收敛，功能也就无法收敛，那么QA就很难判断是否测试充分。比如这个项目，如果有明确的UI，团队就能从UI出发、以用户的视角来分析、实现与测试所有必须的功能。而离开了UI，我们是怎么做的呢？我们是从VTEX出发、以数据集成的视角来分析、实现与测试我们以为的“所有”功能。举个具体的例子，促销是所有电商系统都会涉及的功能，作为电商领域的PasS解决方案，VTEX身实现了31种基础的促销规则，如果再叠加各种过滤条件、以及叠加不同规则之间的竞争规则，单单是下单的价格计算就有上百种方式，作为Integrator，虽然我们不需要去测试验证这上百种计算方式的正确性，但我们仍然需要去获取每一个订单的促销细节信息用于和ERP系统集成，这其中的分析、集成与测试工作量都是非常庞大的，而这些庞大的工作量在客户眼中仅仅做了一件事，那就是对创建订单的数据集成。但如果从UI出发，我们就能从这上百种计价方式中限定出真正会应用到客户业务中的促销方式，从而进行更有针对性的分析与集成，能够节省大量的工作量。即便最后客户说“全都要”，那么我们也能将“全都要”的工作量给可视化出来，从而确保后续的分析、集成与测试工作都能够有的放矢。数据集成可能仅仅是一个API请求带上百种参数，在客户看来这里面没有多少工作量，但当这上百种参数化身成上百种具体的User Journey的时候，客户就能体会到其中的分量了。</p>
+<p>所以，对那些功能强大、适用面宽广的行业级解决方案的集成，一定要落实和明确具体的功能，做到业务驱动和价值交付，否则累死三军，板上钉钉。</p>
+<h1 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h1><p>目前这个项目还在进行当中，上面聊到的问题仅限于第一阶段的过程。当然，严格来说，这个阶段我们什么也没有交付，只是完成了一把集成。基于一些因素，我即将离开这个项目，但这里面的一些经验教训甚为有益，聊以记之。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/01/%E4%BB%8E%E4%B8%80%E4%B8%AA3000%E8%A1%8C%E7%9A%84%E7%99%BB%E5%BD%95%E9%A1%B5%E9%9D%A2%E8%81%8APageObject/" rel="prev" title="从一个3000行的登录页面聊PageObject">
+      <i class="fa fa-chevron-left"></i> 从一个3000行的登录页面聊PageObject
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E2%80%9C%E4%B8%A4%E4%B8%AA%E6%9C%88%E6%8D%8F%E4%B8%80%E4%B8%AA%E7%BE%8E%E7%9A%84%E5%AE%98%E7%BD%91%E2%80%9D"><span class="nav-number">1.</span> <span class="nav-text">“两个月捏一个美的官网”</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B9%9D%E6%9C%88%E7%A7%8B%E9%A3%8E%E4%BC%BC%E7%89%9B%E5%88%80"><span class="nav-number">2.</span> <span class="nav-text">九月秋风似牛刀</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%BA%E4%BA%86%E9%9B%86%E6%88%90%E8%80%8C%E5%81%9A%E7%9A%84%E9%9B%86%E6%88%90"><span class="nav-number">3.</span> <span class="nav-text">为了集成而做的集成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-Mapping"><span class="nav-number">3.1.</span> <span class="nav-text">Data Mapping</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B8%A9%E9%9B%B7%E5%BC%8F%E9%9C%80%E6%B1%82%E7%A1%AE%E8%AE%A4"><span class="nav-number">3.2.</span> <span class="nav-text">踩雷式需求确认</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%B4%E5%B0%AC%E7%9A%84UAT"><span class="nav-number">4.</span> <span class="nav-text">尴尬的UAT</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%95%BF%E8%87%82%E4%BE%9D%E8%B5%96"><span class="nav-number">4.1.</span> <span class="nav-text">长臂依赖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E6%AD%A3%E7%A1%AE%E7%9A%84%E4%BA%BA%E5%81%9A%E6%AD%A3%E7%A1%AE%E7%9A%84%E4%BA%8B"><span class="nav-number">4.2.</span> <span class="nav-text">找正确的人做正确的事</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Lesson-amp-Learn"><span class="nav-number">5.</span> <span class="nav-text">Lesson &amp; Learn</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%80%E5%90%8E"><span class="nav-number">6.</span> <span class="nav-text">最后</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Ariman</p>
+  <div class="site-description" itemprop="description">微服务 自动化测试 契约测试</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ariman</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://mist.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"left","width":120,"height":350,"hOffset":-10,"vOffset":-150},"mobile":{"show":true},"react":{"opacity":1}});</script></body>
+</html>
