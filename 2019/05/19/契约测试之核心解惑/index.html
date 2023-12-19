@@ -35,7 +35,7 @@
 <meta property="og:image" content="http://yoursite.com/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/pact-springCloudContract.png">
 <meta property="og:image" content="http://yoursite.com/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/test-scope.png">
 <meta property="article:published_time" content="2019-05-19T11:36:10.000Z">
-<meta property="article:modified_time" content="2021-05-16T06:36:37.020Z">
+<meta property="article:modified_time" content="2023-12-19T07:54:07.484Z">
 <meta property="article:author" content="Ariman">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://yoursite.com/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/test-expression.png">
@@ -198,7 +198,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-05-16 14:36:37" itemprop="dateModified" datetime="2021-05-16T14:36:37+08:00">2021-05-16</time>
+                <time title="修改时间：2023-12-19 15:54:07" itemprop="dateModified" datetime="2023-12-19T15:54:07+08:00">2023-12-19</time>
               </span>
 
           
@@ -231,9 +231,9 @@
 </blockquote>
 <p>这里的<code>E2E测试</code>可能经常出现在我们的日常交流中，那你知道它的准确含义吗？答案是没有含义！它基本等价于你们一伙人去食堂吃饭（…笑啥，俺就是食堂党，咋的！），A：”今天吃啥？”，B：”新鲜的”。新鲜的啥？炒饭？面条？饺子？套餐？…… </p>
 <p>E2E，End To End，端到端，字面意思简单明了，但它只是一个副词（组），而不是一种测试类型。所以，我们真正想表述的，可能是E2E API Test。那么”E2E API Test”就完整的表述了一项测试活动了吗？不是的！<code>E2E</code>表示的是测试方式，<code>API</code>表示的是被测对象，但这里，我们还缺少被测对象的被测属性，比如，Function、Performance, Security等等，所以，一个比较完整的表述，往往可以是这样的：</p>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/test-expression.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/test-expression.png" alt="test-expression"></p>
 <p>当然，平常的交流中，一般不会这么文绉绉地去抠字眼，因为我们彼此都清楚讨论问题的上下文，这点很重要。特别是针对<code>E2E测试</code>这样的表述。比如，我们有一个前后端分离、后端是微服务集群的系统应用，同样的<code>E2E测试</code>可能就代表着完全不同的测试活动：</p>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/e2e-context.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/e2e-context.png" alt="e2e-context"></p>
 <p>如果从更多的维度来思考，比如套上测试四象限的模式，那么对于测试活动的表述，还会有更多考量。但今天的主题是关于契约测试的，所以就不过多的展开了。为什么要在讨论契约测试之前来废话”测试表述”呢？因为契约测试其实是多种测试方式的和思维的复合产物，比如，契约测试是E2E的测试吗？还是说是基于Mock的？契约测试是服务的接口测试还是集成测试？等等。所以，如果对这些基本的测试概念不是很清楚的，很容易迷失在契约测试的理念中。</p>
 <h2 id="为什么要做契约测试？"><a href="#为什么要做契约测试？" class="headerlink" title="为什么要做契约测试？"></a>为什么要做契约测试？</h2><p>为什么要做契约测试？”因为我们是微服务”？(╬￣皿￣)=○</p>
 <p>很多回答这个问题的答案，都关注在契约测试的目的上。那么，什么是契约测试的目的呢？简单来说，契约测试就是为了发现契约破坏（Contract Breaking)而进行的测试活动。如果你使用过Pact或者Spring Cloud Contract，你会发现，契约测试本身也是通过调用Provider的API接口来获取Response，再与契约文件中期望的结果做对比，从而验证契约是否正确。形式上，这和我们的API接口测试，或者针对功能的集成测试（以下简称集成测试，因为我们这里不讨论API的安全、性能等问题）是非常类似的。换句话说，我们通过API的接口测试或者集成测试，也能达到检查契约的目的，那为什么还要做契约测试呢？这种思考逻辑是完全正确的，也是为什么很多初学者都认为契约测试没有必要的原因。</p>
@@ -242,11 +242,11 @@
 <p>消费者驱动的字面含义，大家都清楚，但往往容易忽略的是<code>被驱动的对象</code>。在讨论契约测试的范畴里，”消费者驱动”述及的对象是契约，而不是契约测试。</p>
 <p>当某个provider正常上线后，某个consumer需要消费这个provider的服务，那么应该由consumer来提出期望建立它们之间的契约测试。因为，<code>契约测试，形式上，虽然测试的是provider，但，价值上，保证的却是consumer的业务</code>。如果consumer对自己都不上心，你还期望provider来时刻关注你的死活吗？别笑，在跨团队的微服务体系下，这些都是真切的痛点。</p>
 <p>理清了消费者驱动，就让我们来看看契约测试真正的价值吧。一个经典的案例：</p>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/multi-consumers-1.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/multi-consumers-1.png" alt="multi-consumers-1"></p>
 <p>在上图一个简单的消费关系中，provider为consumer A，B，C提供服务。provider自己提供的schema包含<code>name</code>,<code>age</code>和<code>gender</code>三个简单的字段。请注意，这份包含name，age和gender的JSON，其本身，只是一个schema，并不是任何契约。<code>契约一定是成对存在的，没有确切consumer的交互定义，只是schema，不是契约</code>。一个列子，中介打印了一份合同，上面写好了房屋租赁的全部信息，但在房东和租客都签字之前，这份”合同”并不具有任何效力，所以它根本就不是一份有意义的合同，法律上，它叫”要约”。（…感谢我大学的法律老师，我居然还记得这个词儿）</p>
 <p>现在，这里有三份契约（对应的，就应该有三份契约测试），consumer A消费provider的age和gender，consumer B消费name、age和gender，consumer C消费name和gender。就目前provider提供的schema来说，没有任何问题，大家相安无事。</p>
 <p>某日，因为业务需求，consumer C期望provider提供更加详细的name信息，包括firstName和lastName。这个需求对provider并不困难，所以，provider打算对schema做类似下面的修改。</p>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/multi-consumers-2.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/multi-consumers-2.png" alt="multi-consumer-2"></p>
 <p>这样的修改，<code>很明显</code>，对consumer C是需要的，对consumer A无所谓，但对consumer B却是不可接受的，属于典型的契约破坏。此时，provider和consumer B之间的契约测试就会挂掉，从而对provider提出预警（至于，剩下的，怎么协调和consumer B的兼容问题，就不是契约测试关注的问题，那需要的是团队间的communication）。</p>
 <p>上面这个示例中的一些细节，可以帮助我们发掘契约测试的价值点：</p>
 <h4 id="“consumer-A没有使用name，consumer-C没有使用age”，"><a href="#“consumer-A没有使用name，consumer-C没有使用age”，" class="headerlink" title="“consumer A没有使用name，consumer C没有使用age”，"></a>“consumer A没有使用name，consumer C没有使用age”，</h4><p>基于消费者驱动的契约测试，契约的内容由consumer提供，其内容体现的是各个consumer对provider提供的schema的消费需求。这里的需求，不光包含consumer”需要什么”，还包含consumer”不需要什么”。这是非常有意义的，因为当你发现provider提供的schema的某些部分不被任何consumer消费时，就代表provider可以对schema的这些内容做任意的修改，完全不必担心会影响到任何consumer。这是契约测试非常重要的价值点。</p>
@@ -265,7 +265,7 @@
 <p>可见，虽然4个集成测试都各司其职，但都不能对这个契约破坏的问题做到防患于未然！只有契约测试，才是这个问题的最佳答案！这就是契约测试最大的价值，它只会在”单provider多consumer”的环境下（这是微服务的常见场景，但不是必然场景），才能发挥出来。</p>
 <h4 id="“很显然，对consumer-A无害，但对consumer-B却是契约破坏”，"><a href="#“很显然，对consumer-A无害，但对consumer-B却是契约破坏”，" class="headerlink" title="“很显然，对consumer A无害，但对consumer B却是契约破坏”，"></a>“很显然，对consumer A无害，但对consumer B却是契约破坏”，</h4><p><code>&quot;很显然&quot;</code>，仅仅是对于我们这个简单得不能再简单的示例而言，真正的业务场景下，特别是一些复杂的微服务集群，又或者是一些时间跨度很长的系统，对于某个provider，到底有多少个consumer？而provider的每一处修改，又到底会对哪些consumer的契约造成怎样的影响？这些往往都是很难确定的问题。我最近所在的一个集团项目上，一个搜索地址的基础服务provider，有十个左右的consumer，其中有八个consumer没有契约测试，就不清楚它们对provider的API具体是如何消费的，所以每次provider要更新，就得八方去通知这些consumer的团队来做回归测试。有时，一点小小的修改，回归测试一分钟就可以搞定，但人肉联系各个团队却会花上好几天……</p>
 <p>如果每个consumer都能和provider建立契约测试（这里我们暂且不考虑负载和去重的问题），通过类似Pact Broker这样的实践，我们就能很好的解决这些效率问题。</p>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/contracts.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/contracts.png" alt="contracts"></p>
 <p>OK，理解透契约测试的这些价值后，对于”要不要做契约测试？”、”谁来做契约测试？”这些问题，相信你就不再疑惑了。想再次强调一下的是，契约测试很多情况下基于微服务而生，但并不代表每个微服务都一定需要契约测试。相对的，一些传统的单体服务，它的架构设计和部署实施，完全和微服务的理念相反，但它提供的服务却被众多的下游消费者使用，那么这样的服务，也有很强的契约测试需求。所以，千万不要把契约测试和微服务做”死绑定”，一定要基于服务的业务来考虑策略。</p>
 <h2 id="契约测试和接口测试、集成测试的区别"><a href="#契约测试和接口测试、集成测试的区别" class="headerlink" title="契约测试和接口测试、集成测试的区别"></a>契约测试和接口测试、集成测试的区别</h2><p>“契约测试和接口测试、集成测试的区别”，从2015年我第一次在BQConf讲契约测试，到写这篇文章之前，最近一次和别人讨论契约测试，这都是一个一直被提起的问题。在上面的内容中，其实已经或多或少的提到了相关的内容。由于具体的测试方式，都是”调用API验证Response”，契约测试、接口测试、集成测试经常被放在一起来进行比较，甚至质疑彼此。</p>
 <p>先让我们来看看接口测试和集成测试。说实话，对于测试理论夯实的QA来说，这里应该没有任何问题的，因为接口测试和集成测试，它们压根儿就是从完全不同的维度来描述测试活动的。</p>
@@ -341,7 +341,7 @@
 </li>
 </ul>
 <p>好了，有了这三点重要的理论基础，就让我们来具体看看Pact和Spring Cloud Contract（以下简称SCC）的区别吧。</p>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/pact-springCloudContract.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/pact-springCloudContract.png" alt="pact-springCloudContract"></p>
 <p>在上面的图中，给出了Pact和SCC具体的使用方式（逻辑路径）。当然，如果你有一些基本的Pact或SCC的使用经验，就再好不过了。</p>
 <p>Pact，在consumer端生成契约文件，发布到Pact Broker，而后，provider从Pact Broker获取契约文件，触发provider端执行契约测试。</p>
 <p>SCC，实际生成契约文件的工作是发生在provider端的，基于这份契约文件，在provider端，生成了Java的测试案例，这些测试案例用于provider的功能测试；而在Consumer端，使用同一份契约文件作为Stub，生成了基于WireMock的mock service，consumer可以使用该mock service来做集成测试。</p>
@@ -358,7 +358,7 @@
 <li><p><strong>测试范畴</strong>，是另一个需要考虑的问题。上面提到过，Pact将契约测试的范畴定义在了communicate。什么是communicate呢？很简单，通过通讯获取信息。具体到契约测试中，（可）通讯，体现在API的endpoint接受request（request包括protocol，url，header，body等），返回response；（可）获取信息，体现在获取的response能够被按照期望的方式解析（反序列化）。需要强调的是，communicate的内容不应该包含”使用信息”。使用信息，是consumer的领域逻辑需要处理的问题，而信息使用得是否正确，则应该是consumer的功能测试关注的范畴。注意，这里的功能测试可以发生在单元测试、组件测试、集成测试等各个测试级别。这就是为什么Pact的官方示例文档中，在consumer端，仅仅断言了response的status code这些非常简单的数据。如果consumer团队确实有需求，跨出communicate的范畴来构建集成测试，那么请一定合理斟酌你们的测试范畴。</p>
 </li>
 </ul>
-<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/test-scope.png" alt=""></p>
+<p><img src="/2019/05/19/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8B%E6%A0%B8%E5%BF%83%E8%A7%A3%E6%83%91/test-scope.png" alt="test-scope"></p>
 <h3 id="“生产者驱动的契约测试”？"><a href="#“生产者驱动的契约测试”？" class="headerlink" title="“生产者驱动的契约测试”？"></a>“生产者驱动的契约测试”？</h3><p>相较于到目前为止通篇强调的”消费者驱动的契约测试”，你可能在其他地方，或多或少的，看到过”生产者驱动的契约测试”的命题。<br>单论<code>契约</code>，确实可以分为”消费者驱动的契约”和”生产者驱动的契约”，但述及<code>契约测试</code>，到目前为止，恕俺视野有限，我并不认为”生产者驱动的契约测试”是一种正确的表述。</p>
 <ul>
 <li><p><code>契约</code>不等于<code>契约测试</code>，这不必赘述；</p>

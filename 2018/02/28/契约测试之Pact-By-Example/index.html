@@ -33,7 +33,7 @@
 <meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.nanoha.png">
 <meta property="og:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/pact-broker.png">
 <meta property="article:published_time" content="2018-02-28T15:33:51.000Z">
-<meta property="article:modified_time" content="2021-05-16T06:36:37.008Z">
+<meta property="article:modified_time" content="2023-12-19T07:54:07.537Z">
 <meta property="article:author" content="Ariman">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://yoursite.com/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.miku.png">
@@ -196,7 +196,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2021-05-16 14:36:37" itemprop="dateModified" datetime="2021-05-16T14:36:37+08:00">2021-05-16</time>
+                <time title="修改时间：2023-12-19 15:54:07" itemprop="dateModified" datetime="2023-12-19T15:54:07+08:00">2023-12-19</time>
               </span>
 
           
@@ -221,14 +221,14 @@
 <h2 id="示例应用"><a href="#示例应用" class="headerlink" title="示例应用"></a>示例应用</h2><p>示例应用非常简单，一个服务提供者Provider，两个服务消费者Miku和Nanoha（啥？你不知道Miku和Nanoha是什么？……问度娘吧……(～o￣3￣)～……）。</p>
 <h3 id="Provider"><a href="#Provider" class="headerlink" title="Provider"></a>Provider</h3><p>Provider是一个简单的API，返回一些个人信息。<br>启动Provider：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-provider:bootRun</span><br></pre></td></tr></table></figure>
-<p>然后访问 <a target="_blank" rel="noopener" href="http://localhost:8080/information?name=Miku">http://localhost:8080/information?name=Miku</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.miku.png" alt=""></p>
-<p>或者访问 <a target="_blank" rel="noopener" href="http://localhost:8080/information?name=Nanoha">http://localhost:8080/information?name=Nanoha</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.nanoha.png" alt=""></p>
+<p>然后访问 <a target="_blank" rel="noopener" href="http://localhost:8080/information?name=Miku">http://localhost:8080/information?name=Miku</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.miku.png" alt="provider-miku"></p>
+<p>或者访问 <a target="_blank" rel="noopener" href="http://localhost:8080/information?name=Nanoha">http://localhost:8080/information?name=Nanoha</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/provider.nanoha.png" alt="provider-nanoha"></p>
 <h3 id="消费者-Miku-amp-Nanoha"><a href="#消费者-Miku-amp-Nanoha" class="headerlink" title="消费者 Miku &amp; Nanoha"></a>消费者 Miku &amp; Nanoha</h3><p>Miku和Nanoha调用Provider的API拿到各自的数据，然后显示在前端页面上。<br>启动Miku：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-miku:bootRun</span><br></pre></td></tr></table></figure>
-<p>然后用浏览器访问 <a target="_blank" rel="noopener" href="http://localhost:8081/miku">http://localhost:8081/miku</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.miku.png" alt=""></p>
+<p>然后用浏览器访问 <a target="_blank" rel="noopener" href="http://localhost:8081/miku">http://localhost:8081/miku</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.miku.png" alt="consumer-miku"></p>
 <p>启动Nanoha：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-nanoha:bootRun</span><br></pre></td></tr></table></figure>
-<p>然后用浏览器访问 <a target="_blank" rel="noopener" href="http://localhost:8082/nanoha">http://localhost:8082/nanoha</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.nanoha.png" alt=""></p>
+<p>然后用浏览器访问 <a target="_blank" rel="noopener" href="http://localhost:8082/nanoha">http://localhost:8082/nanoha</a><br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/consumer.nanoha.png" alt="consumer-nanoha"></p>
 <p>Miku和Nanoha做的事情基本一样，差别就是Nanoha会去多拿<code>.nationality</code>这个字段，而<code>.salary</code>这个字段Miku和Nanoha都没有用到。</p>
 <blockquote>
 <p>示例中的1个Provider和2个Consumer都在一个codebase里面，这只是为了方便管理示例代码，而实际的项目中，绝大多数的Provider和Consumer都是在不同的codebase里面管理的，请注意哟！</p>
@@ -375,7 +375,7 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./gradlew :example-consumer-miku:pactPublish</span><br></pre></td></tr></table></figure>
 <p>然后你会在命令行下面看到类似这样的输出：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; Task :example-consumer-miku:pactPublish </span><br><span class="line">Publishing JunitDSLConsumer1-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitDSLJsonBodyConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitDSLLambdaJsonBodyConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing BaseConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitRuleConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitRuleMultipleInteractionsConsumer-ExampleProvider.json ... HTTP/1.1 200 OK</span><br><span class="line">Publishing JunitDSLConsumer2-ExampleProvider.json ... HTTP/1.1 200 OK</span><br></pre></td></tr></table></figure>
-<p>上传完成之后，你就可以在我们的<a target="_blank" rel="noopener" href="https://ariman.pact.dius.com.au/">Broker服务器</a>上面看到对于的契约内容了。<br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/pact-broker.png" alt="image"></p>
+<p>上传完成之后，你就可以在我们的<a target="_blank" rel="noopener" href="https://ariman.pact.dius.com.au/">Broker服务器</a>上面看到对于的契约内容了。<br><img src="/2018/02/28/%E5%A5%91%E7%BA%A6%E6%B5%8B%E8%AF%95%E4%B9%8BPact-By-Example/pact-broker.png" alt="pact-broker"></p>
 <blockquote>
 <p>值得说明的是，你可以看到上面我们有7个Consumer对应1个Provdier。在真实的项目中，不应该是这样的，因为现在我们实际上只有一个Consumer Miku。我只是在不同的契约文件中对Consumer的名字做了不同的命名，目的只是展示一下Broker的这个漂亮的调用关系图。这只是一个示例，仅此而已。</p>
 </blockquote>
